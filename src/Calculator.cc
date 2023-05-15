@@ -231,408 +231,360 @@ void Calculator::op_dec()
 
 void Calculator::op_run()
 {
-    BasicBlock basic_block(_hostcode.begin(), _hostcode.end());
+    auto& rpn(*this);
+    auto& jit(_hostcode);
+    BasicBlock basic_block(jit.begin(), jit.end());
 
     auto exec_nop = [&]() -> void
     {
-        log_debug("exec <nop>");
-
-        return op_nop();
+        rpn.log_debug("exec <nop>");
+        rpn.op_nop();
     };
 
     auto exec_i64 = [&](const int64_t operand) -> void
     {
-        log_debug("exec <i64>");
-
-        return op_i64(operand);
+        rpn.log_debug("exec <i64>");
+        rpn.op_i64(operand);
     };
 
     auto exec_top = [&]() -> void
     {
-        log_debug("exec <top>");
-
-        return op_top();
+        rpn.log_debug("exec <top>");
+        rpn.op_top();
     };
 
     auto exec_pop = [&]() -> void
     {
-        log_debug("exec <pop>");
-
-        return op_pop();
+        rpn.log_debug("exec <pop>");
+        rpn.op_pop();
     };
 
     auto exec_clr = [&]() -> void
     {
-        log_debug("exec <clr>");
-
-        return op_clr();
+        rpn.log_debug("exec <clr>");
+        rpn.op_clr();
     };
 
     auto exec_dup = [&]() -> void
     {
-        log_debug("exec <dup>");
-
-        return op_dup();
+        rpn.log_debug("exec <dup>");
+        rpn.op_dup();
     };
 
     auto exec_xch = [&]() -> void
     {
-        log_debug("exec <xch>");
-
-        return op_xch();
+        rpn.log_debug("exec <xch>");
+        rpn.op_xch();
     };
 
     auto exec_sto = [&]() -> void
     {
-        log_debug("exec <sto>");
-
-        return op_sto();
+        rpn.log_debug("exec <sto>");
+        rpn.op_sto();
     };
 
     auto exec_rcl = [&]() -> void
     {
-        log_debug("exec <rcl>");
-
-        return op_rcl();
+        rpn.log_debug("exec <rcl>");
+        rpn.op_rcl();
     };
 
     auto exec_abs = [&]() -> void
     {
-        log_debug("exec <abs>");
-
-        return op_abs();
+        rpn.log_debug("exec <abs>");
+        rpn.op_abs();
     };
 
     auto exec_neg = [&]() -> void
     {
-        log_debug("exec <neg>");
-
-        return op_neg();
+        rpn.log_debug("exec <neg>");
+        rpn.op_neg();
     };
 
     auto exec_add = [&]() -> void
     {
-        log_debug("exec <add>");
-
-        return op_add();
+        rpn.log_debug("exec <add>");
+        rpn.op_add();
     };
 
     auto exec_sub = [&]() -> void
     {
-        log_debug("exec <sub>");
-
-        return op_sub();
+        rpn.log_debug("exec <sub>");
+        rpn.op_sub();
     };
 
     auto exec_mul = [&]() -> void
     {
-        log_debug("exec <mul>");
-
-        return op_mul();
+        rpn.log_debug("exec <mul>");
+        rpn.op_mul();
     };
 
     auto exec_div = [&]() -> void
     {
-        log_debug("exec <div>");
-
-        return op_div();
+        rpn.log_debug("exec <div>");
+        rpn.op_div();
     };
 
     auto exec_mod = [&]() -> void
     {
-        log_debug("exec <mod>");
-
-        return op_mod();
+        rpn.log_debug("exec <mod>");
+        rpn.op_mod();
     };
 
     auto exec_cpl = [&]() -> void
     {
-        log_debug("exec <cpl>");
-
-        return op_cpl();
+        rpn.log_debug("exec <cpl>");
+        rpn.op_cpl();
     };
 
     auto exec_and = [&]() -> void
     {
-        log_debug("exec <and>");
-
-        return op_and();
+        rpn.log_debug("exec <and>");
+        rpn.op_and();
     };
 
     auto exec_ior = [&]() -> void
     {
-        log_debug("exec <ior>");
-
-        return op_ior();
+        rpn.log_debug("exec <ior>");
+        rpn.op_ior();
     };
 
     auto exec_xor = [&]() -> void
     {
-        log_debug("exec <xor>");
-
-        return op_xor();
+        rpn.log_debug("exec <xor>");
+        rpn.op_xor();
     };
 
     auto exec_shl = [&]() -> void
     {
-        log_debug("exec <shl>");
-
-        return op_shl();
+        rpn.log_debug("exec <shl>");
+        rpn.op_shl();
     };
 
     auto exec_shr = [&]() -> void
     {
-        log_debug("exec <shr>");
-
-        return op_shr();
+        rpn.log_debug("exec <shr>");
+        rpn.op_shr();
     };
 
     auto exec_inc = [&]() -> void
     {
-        log_debug("exec <inc>");
-
-        return op_inc();
+        rpn.log_debug("exec <inc>");
+        rpn.op_inc();
     };
 
     auto exec_dec = [&]() -> void
     {
-        log_debug("exec <dec>");
-
-        return op_dec();
+        rpn.log_debug("exec <dec>");
+        rpn.op_dec();
     };
 
     auto emit_prolog = [&]() -> void
     {
-        log_debug("emit <function prolog>");
-
-        _hostcode.push_rbp();
-        _hostcode.mov_rbp_rsp();
+        rpn.log_debug("emit <function prolog>");
+        jit.push_rbp();
+        jit.mov_rbp_rsp();
     };
 
     auto emit_epilog = [&]() -> void
     {
-        log_debug("emit <function epilog>");
-
-        _hostcode.mov_rsp_rbp();
-        _hostcode.pop_rbp();
-        _hostcode.ret();
+        rpn.log_debug("emit <function epilog>");
+        jit.mov_rsp_rbp();
+        jit.pop_rbp();
+        jit.ret();
     };
 
     auto emit_nop = [&]() -> void
     {
-        log_debug("emit <nop>");
-
-        _hostcode.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&_operands));
-        _hostcode.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_nop));
-        _hostcode.call_rax();
+        rpn.log_debug("emit <nop>");
+        jit.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&_operands));
+        jit.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_nop));
+        jit.call_rax();
     };
 
     auto emit_i64 = [&](const int64_t operand) -> void
     {
-        log_debug("emit <i64>");
-
-        _hostcode.mov_rsi_imm64(operand);
-        _hostcode.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&_operands));
-        _hostcode.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_i64));
-        _hostcode.call_rax();
+        rpn.log_debug("emit <i64>");
+        jit.mov_rsi_imm64(operand);
+        jit.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&_operands));
+        jit.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_i64));
+        jit.call_rax();
     };
 
     auto emit_top = [&]() -> void
     {
-        log_debug("emit <top>");
-
-        _hostcode.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&_operands));
-        _hostcode.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_top));
-        _hostcode.call_rax();
+        rpn.log_debug("emit <top>");
+        jit.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&_operands));
+        jit.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_top));
+        jit.call_rax();
     };
 
     auto emit_pop = [&]() -> void
     {
-        log_debug("emit <pop>");
-
-        _hostcode.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&_operands));
-        _hostcode.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_pop));
-        _hostcode.call_rax();
+        rpn.log_debug("emit <pop>");
+        jit.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&_operands));
+        jit.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_pop));
+        jit.call_rax();
     };
 
     auto emit_clr = [&]() -> void
     {
-        log_debug("emit <clr>");
-
-        _hostcode.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&_operands));
-        _hostcode.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_clr));
-        _hostcode.call_rax();
+        rpn.log_debug("emit <clr>");
+        jit.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&_operands));
+        jit.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_clr));
+        jit.call_rax();
     };
 
     auto emit_dup = [&]() -> void
     {
-        log_debug("emit <dup>");
-
-        _hostcode.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&_operands));
-        _hostcode.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_dup));
-        _hostcode.call_rax();
+        rpn.log_debug("emit <dup>");
+        jit.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&_operands));
+        jit.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_dup));
+        jit.call_rax();
     };
 
     auto emit_xch = [&]() -> void
     {
-        log_debug("emit <xch>");
-
-        _hostcode.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&_operands));
-        _hostcode.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_xch));
-        _hostcode.call_rax();
+        rpn.log_debug("emit <xch>");
+        jit.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&_operands));
+        jit.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_xch));
+        jit.call_rax();
     };
 
     auto emit_sto = [&]() -> void
     {
-        log_debug("emit <sto>");
-
-        _hostcode.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&_operands));
-        _hostcode.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_sto));
-        _hostcode.call_rax();
+        rpn.log_debug("emit <sto>");
+        jit.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&_operands));
+        jit.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_sto));
+        jit.call_rax();
     };
 
     auto emit_rcl = [&]() -> void
     {
-        log_debug("emit <rcl>");
-
-        _hostcode.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&_operands));
-        _hostcode.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_rcl));
-        _hostcode.call_rax();
+        rpn.log_debug("emit <rcl>");
+        jit.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&_operands));
+        jit.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_rcl));
+        jit.call_rax();
     };
 
     auto emit_abs = [&]() -> void
     {
-        log_debug("emit <abs>");
-
-        _hostcode.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&_operands));
-        _hostcode.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_abs));
-        _hostcode.call_rax();
+        rpn.log_debug("emit <abs>");
+        jit.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&_operands));
+        jit.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_abs));
+        jit.call_rax();
     };
 
     auto emit_neg = [&]() -> void
     {
-        log_debug("emit <neg>");
-
-        _hostcode.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&_operands));
-        _hostcode.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_neg));
-        _hostcode.call_rax();
+        rpn.log_debug("emit <neg>");
+        jit.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&_operands));
+        jit.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_neg));
+        jit.call_rax();
     };
 
     auto emit_add = [&]() -> void
     {
-        log_debug("emit <add>");
-
-        _hostcode.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&_operands));
-        _hostcode.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_add));
-        _hostcode.call_rax();
+        rpn.log_debug("emit <add>");
+        jit.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&_operands));
+        jit.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_add));
+        jit.call_rax();
     };
 
     auto emit_sub = [&]() -> void
     {
-        log_debug("emit <sub>");
-
-        _hostcode.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&_operands));
-        _hostcode.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_sub));
-        _hostcode.call_rax();
+        rpn.log_debug("emit <sub>");
+        jit.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&_operands));
+        jit.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_sub));
+        jit.call_rax();
     };
 
     auto emit_mul = [&]() -> void
     {
-        log_debug("emit <mul>");
-
-        _hostcode.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&_operands));
-        _hostcode.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_mul));
-        _hostcode.call_rax();
+        rpn.log_debug("emit <mul>");
+        jit.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&_operands));
+        jit.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_mul));
+        jit.call_rax();
     };
 
     auto emit_div = [&]() -> void
     {
-        log_debug("emit <div>");
-
-        _hostcode.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&_operands));
-        _hostcode.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_div));
-        _hostcode.call_rax();
+        rpn.log_debug("emit <div>");
+        jit.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&_operands));
+        jit.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_div));
+        jit.call_rax();
     };
 
     auto emit_mod = [&]() -> void
     {
-        log_debug("emit <mod>");
-
-        _hostcode.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&_operands));
-        _hostcode.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_mod));
-        _hostcode.call_rax();
+        rpn.log_debug("emit <mod>");
+        jit.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&_operands));
+        jit.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_mod));
+        jit.call_rax();
     };
 
     auto emit_cpl = [&]() -> void
     {
-        log_debug("emit <cpl>");
-
-        _hostcode.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&_operands));
-        _hostcode.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_cpl));
-        _hostcode.call_rax();
+        rpn.log_debug("emit <cpl>");
+        jit.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&_operands));
+        jit.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_cpl));
+        jit.call_rax();
     };
 
     auto emit_and = [&]() -> void
     {
-        log_debug("emit <and>");
-
-        _hostcode.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&_operands));
-        _hostcode.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_and));
-        _hostcode.call_rax();
+        rpn.log_debug("emit <and>");
+        jit.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&_operands));
+        jit.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_and));
+        jit.call_rax();
     };
 
     auto emit_ior = [&]() -> void
     {
-        log_debug("emit <ior>");
-
-        _hostcode.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&_operands));
-        _hostcode.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_ior));
-        _hostcode.call_rax();
+        rpn.log_debug("emit <ior>");
+        jit.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&_operands));
+        jit.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_ior));
+        jit.call_rax();
     };
 
     auto emit_xor = [&]() -> void
     {
-        log_debug("emit <xor>");
-
-        _hostcode.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&_operands));
-        _hostcode.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_xor));
-        _hostcode.call_rax();
+        rpn.log_debug("emit <xor>");
+        jit.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&_operands));
+        jit.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_xor));
+        jit.call_rax();
     };
 
     auto emit_shl = [&]() -> void
     {
-        log_debug("emit <shl>");
-
-        _hostcode.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&_operands));
-        _hostcode.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_shl));
-        _hostcode.call_rax();
+        rpn.log_debug("emit <shl>");
+        jit.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&_operands));
+        jit.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_shl));
+        jit.call_rax();
     };
 
     auto emit_shr = [&]() -> void
     {
-        log_debug("emit <shr>");
-
-        _hostcode.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&_operands));
-        _hostcode.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_shr));
-        _hostcode.call_rax();
+        rpn.log_debug("emit <shr>");
+        jit.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&_operands));
+        jit.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_shr));
+        jit.call_rax();
     };
 
     auto emit_inc = [&]() -> void
     {
-        log_debug("emit <inc>");
-
-        _hostcode.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&_operands));
-        _hostcode.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_inc));
-        _hostcode.call_rax();
+        rpn.log_debug("emit <inc>");
+        jit.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&_operands));
+        jit.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_inc));
+        jit.call_rax();
     };
 
     auto emit_dec = [&]() -> void
     {
-        log_debug("emit <dec>");
-
-        _hostcode.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&_operands));
-        _hostcode.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_dec));
-        _hostcode.call_rax();
+        rpn.log_debug("emit <dec>");
+        jit.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&_operands));
+        jit.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_dec));
+        jit.call_rax();
     };
 
     auto prolog = [&]() -> void
