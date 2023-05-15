@@ -17,6 +17,7 @@
 #ifndef __RPN_Program_h__
 #define __RPN_Program_h__
 
+#include "Logger.h"
 #include "Console.h"
 #include "Runnable.h"
 #include "Calculator.h"
@@ -39,6 +40,7 @@ namespace rpn {
 
 class Program final
     : public Runnable
+    , public Logger
 {
 public: // public interface
     Program(ArgList&, Console&);
@@ -49,20 +51,29 @@ public: // public interface
 
     virtual ~Program() = default;
 
+public: // runnable interface
     virtual void run() override;
 
-private: // private interface
-    void usage();
+public: // logger interface
+    virtual void log_debug(const std::string& message) override;
 
-    void log_debug(const std::string& message);
+    virtual void log_trace(const std::string& message) override;
 
-    void log_trace(const std::string& message);
+    virtual void log_print(const std::string& message) override;
 
-    void log_print(const std::string& message);
+    virtual void log_alert(const std::string& message) override;
 
-    void log_alert(const std::string& message);
+    virtual void log_error(const std::string& message) override;
 
-    void log_error(const std::string& message);
+    virtual void set_debug(const bool enabled) override;
+
+    virtual void set_trace(const bool enabled) override;
+
+    virtual void set_print(const bool enabled) override;
+
+    virtual void set_alert(const bool enabled) override;
+
+    virtual void set_error(const bool enabled) override;
 
 private: // private data
     ArgList    _arglist;

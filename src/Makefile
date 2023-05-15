@@ -67,6 +67,7 @@ RPNCALC_OPTS = --verbose
 
 RPNCALC_SRCS = \
 	State.cc \
+	Logger.cc \
 	Console.cc \
 	Runnable.cc \
 	Listener.cc \
@@ -82,6 +83,7 @@ RPNCALC_SRCS = \
 
 RPNCALC_HDRS = \
 	State.h \
+	Logger.h \
 	Console.h \
 	Runnable.h \
 	Listener.h \
@@ -97,6 +99,7 @@ RPNCALC_HDRS = \
 
 RPNCALC_OBJS = \
 	State.o \
+	Logger.o \
 	Console.o \
 	Runnable.o \
 	Listener.o \
@@ -183,6 +186,9 @@ check_fibonacci : build_rpncalc
 # ----------------------------------------------------------------------------
 
 State.o : State.cc \
+	$(RPNCALC_HDRS)
+
+Logger.o : Logger.cc \
 	$(RPNCALC_HDRS)
 
 Console.o : Console.cc \

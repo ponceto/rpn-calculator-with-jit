@@ -42,6 +42,7 @@ namespace rpn {
 
 Calculator::Calculator(Console& console)
     : Listener()
+    , Logger()
     , _console(console)
     , _operands()
     , _bytecode()
@@ -947,6 +948,31 @@ void Calculator::log_alert(const std::string& message)
 void Calculator::log_error(const std::string& message)
 {
     _console.log_error(message);
+}
+
+void Calculator::set_debug(const bool enabled)
+{
+    _console.set_debug(enabled);
+}
+
+void Calculator::set_trace(const bool enabled)
+{
+    _console.set_trace(enabled);
+}
+
+void Calculator::set_print(const bool enabled)
+{
+    _console.set_print(enabled);
+}
+
+void Calculator::set_alert(const bool enabled)
+{
+    _console.set_alert(enabled);
+}
+
+void Calculator::set_error(const bool enabled)
+{
+    _console.set_error(enabled);
 }
 
 void Calculator::log_result()

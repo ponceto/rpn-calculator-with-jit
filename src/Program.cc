@@ -41,6 +41,7 @@ namespace rpn {
 
 Program::Program(ArgList& arglist, Console& console)
     : Runnable()
+    , Logger()
     , _arglist(arglist)
     , _console(console)
     , _calculator(console)
@@ -62,19 +63,19 @@ void Program::run()
     auto opt_verbose = [&](const std::string& argument) -> bool
     {
         if(argument == "--verbose") {
-            _console.set_debug(true);
-            _console.set_trace(true);
-            _console.set_print(true);
-            _console.set_alert(true);
-            _console.set_error(true);
+            set_debug(true);
+            set_trace(true);
+            set_print(true);
+            set_alert(true);
+            set_error(true);
             return true;
         }
         if(argument == "--quiet") {
-            _console.set_debug(false);
-            _console.set_trace(false);
-            _console.set_print(false);
-            _console.set_alert(false);
-            _console.set_error(false);
+            set_debug(false);
+            set_trace(false);
+            set_print(false);
+            set_alert(false);
+            set_error(false);
             return true;
         }
         return false;
@@ -83,11 +84,11 @@ void Program::run()
     auto opt_debug = [&](const std::string& argument) -> bool
     {
         if(argument == "--debug") {
-            _console.set_debug(true);
+            set_debug(true);
             return true;
         }
         if(argument == "--no-debug") {
-            _console.set_debug(false);
+            set_debug(false);
             return true;
         }
         return false;
@@ -96,11 +97,11 @@ void Program::run()
     auto opt_trace = [&](const std::string& argument) -> bool
     {
         if(argument == "--trace") {
-            _console.set_trace(true);
+            set_trace(true);
             return true;
         }
         if(argument == "--no-trace") {
-            _console.set_trace(false);
+            set_trace(false);
             return true;
         }
         return false;
@@ -109,11 +110,11 @@ void Program::run()
     auto opt_print = [&](const std::string& argument) -> bool
     {
         if(argument == "--print") {
-            _console.set_print(true);
+            set_print(true);
             return true;
         }
         if(argument == "--no-print") {
-            _console.set_print(false);
+            set_print(false);
             return true;
         }
         return false;
@@ -122,11 +123,11 @@ void Program::run()
     auto opt_alert = [&](const std::string& argument) -> bool
     {
         if(argument == "--alert") {
-            _console.set_alert(true);
+            set_alert(true);
             return true;
         }
         if(argument == "--no-alert") {
-            _console.set_alert(false);
+            set_alert(false);
             return true;
         }
         return false;
@@ -135,11 +136,11 @@ void Program::run()
     auto opt_error = [&](const std::string& argument) -> bool
     {
         if(argument == "--error") {
-            _console.set_error(true);
+            set_error(true);
             return true;
         }
         if(argument == "--no-error") {
-            _console.set_error(false);
+            set_error(false);
             return true;
         }
         return false;
@@ -200,9 +201,32 @@ void Program::run()
         return false;
     };
 
-    auto do_usage = [&]() -> void
+    auto do_usage = [&](std::ostream& stream) -> void
     {
-        usage();
+        stream << "Usage:" << ' ' << _arglist[0] << ' ' << "[OPTIONS...] [EXPR [VERB]]..." << std::endl;
+        stream << ""                                                                       << std::endl;
+        stream << "Options:"                                                               << std::endl;
+        stream << ""                                                                       << std::endl;
+        stream << "    --help, -h                   display this help and exit"            << std::endl;
+        stream << ""                                                                       << std::endl;
+        stream << "    --verbose, --quiet           enable/disable all log messages"       << std::endl;
+        stream << "    --debug, --no-debug          enable/disable debug log level"        << std::endl;
+        stream << "    --trace, --no-trace          enable/disable trace log level"        << std::endl;
+        stream << "    --print, --no-print          enable/disable print log level"        << std::endl;
+        stream << "    --alert, --no-alert          enable/disable alert log level"        << std::endl;
+        stream << "    --error, --no-error          enable/disable error log level"        << std::endl;
+        stream << ""                                                                       << std::endl;
+        stream << "Expr:"                                                                  << std::endl;
+        stream << ""                                                                       << std::endl;
+        stream << "    a valid RPN expression"                                             << std::endl;
+        stream << ""                                                                       << std::endl;
+        stream << "Verb:"                                                                  << std::endl;
+        stream << ""                                                                       << std::endl;
+        stream << "    execute                     execute an RPN expression"              << std::endl;
+        stream << "    compile                     compile an RPN expression"              << std::endl;
+        stream << "    run                         run the compiled expression"            << std::endl;
+        stream << "    clear                       clear the stack"                        << std::endl;
+        stream << ""                                                                       << std::endl;
     };
 
     auto do_parse = [&]() -> void
@@ -252,41 +276,9 @@ void Program::run()
     };
 
     if(has_help()) {
-        return do_usage();
+        return do_usage(_console.error_stream());
     }
     return do_parse();
-}
-
-void Program::usage()
-{
-    auto do_usage = [&](std::ostream& stream) -> void
-    {
-        stream << "Usage:" << ' ' << _arglist[0] << ' ' << "[OPTIONS...] [EXPR [VERB]]..." << std::endl;
-        stream << ""                                                                       << std::endl;
-        stream << "Options:"                                                               << std::endl;
-        stream << ""                                                                       << std::endl;
-        stream << "    --help, -h                   display this help and exit"            << std::endl;
-        stream << ""                                                                       << std::endl;
-        stream << "    --verbose, --quiet           enable/disable all log messages"       << std::endl;
-        stream << "    --debug, --no-debug          enable/disable debug log level"        << std::endl;
-        stream << "    --trace, --no-trace          enable/disable trace log level"        << std::endl;
-        stream << "    --print, --no-print          enable/disable print log level"        << std::endl;
-        stream << "    --alert, --no-alert          enable/disable alert log level"        << std::endl;
-        stream << "    --error, --no-error          enable/disable error log level"        << std::endl;
-        stream << ""                                                                       << std::endl;
-        stream << "Expr:"                                                                  << std::endl;
-        stream << ""                                                                       << std::endl;
-        stream << "    a valid RPN expression"                                             << std::endl;
-        stream << ""                                                                       << std::endl;
-        stream << "Verb:"                                                                  << std::endl;
-        stream << ""                                                                       << std::endl;
-        stream << "    execute                     execute an RPN expression"              << std::endl;
-        stream << "    compile                     compile an RPN expression"              << std::endl;
-        stream << "    run                         run the compiled expression"            << std::endl;
-        stream << "    clear                       clear the stack"                        << std::endl;
-        stream << ""                                                                       << std::endl;
-    };
-    return do_usage(_console.error_stream());
 }
 
 void Program::log_debug(const std::string& message)
@@ -312,6 +304,31 @@ void Program::log_alert(const std::string& message)
 void Program::log_error(const std::string& message)
 {
     _console.log_error(message);
+}
+
+void Program::set_debug(const bool enabled)
+{
+    _console.set_debug(enabled);
+}
+
+void Program::set_trace(const bool enabled)
+{
+    _console.set_trace(enabled);
+}
+
+void Program::set_print(const bool enabled)
+{
+    _console.set_print(enabled);
+}
+
+void Program::set_alert(const bool enabled)
+{
+    _console.set_alert(enabled);
+}
+
+void Program::set_error(const bool enabled)
+{
+    _console.set_error(enabled);
 }
 
 }

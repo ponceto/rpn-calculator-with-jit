@@ -17,6 +17,7 @@
 #ifndef __RPN_Calculator_h__
 #define __RPN_Calculator_h__
 
+#include "Logger.h"
 #include "Console.h"
 #include "Parser.h"
 #include "Compiler.h"
@@ -30,6 +31,7 @@ namespace rpn {
 
 class Calculator final
     : public Listener
+    , public Logger
 {
 public: // public interface
     Calculator(Console&);
@@ -101,16 +103,26 @@ public: // listener interface
 
     virtual void op_run() override;
 
-private: // private interface
-    void log_debug(const std::string& message);
+public: // logger interface
+    virtual void log_debug(const std::string& message) override;
 
-    void log_trace(const std::string& message);
+    virtual void log_trace(const std::string& message) override;
 
-    void log_print(const std::string& message);
+    virtual void log_print(const std::string& message) override;
 
-    void log_alert(const std::string& message);
+    virtual void log_alert(const std::string& message) override;
 
-    void log_error(const std::string& message);
+    virtual void log_error(const std::string& message) override;
+
+    virtual void set_debug(const bool enabled) override;
+
+    virtual void set_trace(const bool enabled) override;
+
+    virtual void set_print(const bool enabled) override;
+
+    virtual void set_alert(const bool enabled) override;
+
+    virtual void set_error(const bool enabled) override;
 
     void log_result();
 

@@ -34,7 +34,7 @@
 #include "Console.h"
 
 // ---------------------------------------------------------------------------
-// <anonymous>::stuff
+// <anonymous>::LOG
 // ---------------------------------------------------------------------------
 
 namespace {
@@ -48,101 +48,160 @@ const std::string LOG_ERROR("🔴");
 }
 
 // ---------------------------------------------------------------------------
+// <anonymous>::Flags
+// ---------------------------------------------------------------------------
+
+namespace {
+
+struct Flags
+{
+    static constexpr unsigned int FL_ALL   = (~0);
+    static constexpr unsigned int FL_NONE  = 0x00;
+    static constexpr unsigned int FL_DEBUG = 0x01;
+    static constexpr unsigned int FL_TRACE = 0x02;
+    static constexpr unsigned int FL_PRINT = 0x04;
+    static constexpr unsigned int FL_ALERT = 0x08;
+    static constexpr unsigned int FL_ERROR = 0x10;
+};
+
+}
+
+// ---------------------------------------------------------------------------
 // rpn::Console
 // ---------------------------------------------------------------------------
 
 namespace rpn {
 
 Console::Console(std::istream& cin, std::ostream& cout, std::ostream& cerr)
-    : _flags(FL_ALL)
+    : Logger()
+    , _logger_flags(Flags::FL_ALL)
     , _input_stream(cin)
     , _print_stream(cout)
     , _error_stream(cerr)
 {
 }
 
+bool Console::inputln(std::string& message)
+{
+    std::istream& stream(_input_stream);
+
+    if(stream.good()) {
+        static_cast<void>(std::getline(stream, message));
+        return true;
+    }
+    return false;
+}
+
+void Console::println(const std::string& message)
+{
+    std::ostream& stream(_print_stream);
+
+    if(stream.good()) {
+        stream << message << std::endl;
+    }
+}
+
+void Console::errorln(const std::string& message)
+{
+    std::ostream& stream(_error_stream);
+
+    if(stream.good()) {
+        stream << message << std::endl;
+    }
+}
+
 void Console::log_debug(const std::string& message)
 {
-    if(_flags & FL_DEBUG) {
-        _print_stream << LOG_DEBUG << ' ' << message << std::endl;
+    std::ostream& stream(_print_stream);
+
+    if(stream.good() && (_logger_flags & Flags::FL_DEBUG)) {
+        stream << LOG_DEBUG << ' ' << message << std::endl;
     }
 }
 
 void Console::log_trace(const std::string& message)
 {
-    if(_flags & FL_TRACE) {
-        _print_stream << LOG_TRACE << ' ' << message << std::endl;
+    std::ostream& stream(_print_stream);
+
+    if(stream.good() && (_logger_flags & Flags::FL_TRACE)) {
+        stream << LOG_TRACE << ' ' << message << std::endl;
     }
 }
 
 void Console::log_print(const std::string& message)
 {
-    if(_flags & FL_PRINT) {
-        _print_stream << LOG_PRINT << ' ' << message << std::endl;
+    std::ostream& stream(_print_stream);
+
+    if(stream.good() && (_logger_flags & Flags::FL_PRINT)) {
+        stream << LOG_PRINT << ' ' << message << std::endl;
     }
 }
 
 void Console::log_alert(const std::string& message)
 {
-    if(_flags & FL_ALERT) {
-        _error_stream << LOG_ALERT << ' ' << message << std::endl;
+    std::ostream& stream(_error_stream);
+
+    if(stream.good() && (_logger_flags & Flags::FL_ALERT)) {
+        stream << LOG_ALERT << ' ' << message << std::endl;
     }
 }
 
 void Console::log_error(const std::string& message)
 {
-    if(_flags & FL_ERROR) {
-        _error_stream << LOG_ERROR << ' ' << message << std::endl;
+    std::ostream& stream(_error_stream);
+
+    if(stream.good() && (_logger_flags & Flags::FL_ERROR)) {
+        stream << LOG_ERROR << ' ' << message << std::endl;
     }
 }
 
 void Console::set_debug(const bool enabled)
 {
     if(enabled != false) {
-        _flags |= FL_DEBUG;
+        _logger_flags |= Flags::FL_DEBUG;
     }
     else {
-        _flags &= ~FL_DEBUG;
+        _logger_flags &= ~Flags::FL_DEBUG;
     }
 }
 
 void Console::set_trace(const bool enabled)
 {
     if(enabled != false) {
-        _flags |= FL_TRACE;
+        _logger_flags |= Flags::FL_TRACE;
     }
     else {
-        _flags &= ~FL_TRACE;
+        _logger_flags &= ~Flags::FL_TRACE;
     }
 }
 
 void Console::set_print(const bool enabled)
 {
     if(enabled != false) {
-        _flags |= FL_PRINT;
+        _logger_flags |= Flags::FL_PRINT;
     }
     else {
-        _flags &= ~FL_PRINT;
+        _logger_flags &= ~Flags::FL_PRINT;
     }
 }
 
 void Console::set_alert(const bool enabled)
 {
     if(enabled != false) {
-        _flags |= FL_ALERT;
+        _logger_flags |= Flags::FL_ALERT;
     }
     else {
-        _flags &= ~FL_ALERT;
+        _logger_flags &= ~Flags::FL_ALERT;
     }
 }
 
 void Console::set_error(const bool enabled)
 {
     if(enabled != false) {
-        _flags |= FL_ERROR;
+        _logger_flags |= Flags::FL_ERROR;
     }
     else {
-        _flags &= ~FL_ERROR;
+        _logger_flags &= ~Flags::FL_ERROR;
     }
 }
 
