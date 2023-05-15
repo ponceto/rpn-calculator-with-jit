@@ -42,9 +42,7 @@
 namespace rpn {
 
 ByteCode::ByteCode()
-    : _buffer(nullptr)
-    , _bufptr(nullptr)
-    , _buflen(0)
+    : Buffer()
 {
     allocate();
 }
@@ -61,9 +59,7 @@ void ByteCode::allocate()
     }
     if(_buffer == nullptr) {
         _buffer = _bufptr = new uint8_t[_buflen];
-    }
-    if(_buffer != nullptr) {
-        clear();
+        reset();
     }
 }
 
@@ -77,52 +73,40 @@ void ByteCode::deallocate()
     }
 }
 
-void ByteCode::clear()
+void ByteCode::reset()
 {
-    auto clear = [&](uint8_t* begin, uint8_t* end, uint8_t value) -> void
-    {
-        if((begin != nullptr) && (end != nullptr)) {
-            std::fill(begin, end, value);
-        }
-    };
-
-    return clear((_bufptr = _buffer), (_buffer + _buflen), OP_NOP);
+    Buffer::reset(OP_NOP);
 }
 
 void ByteCode::emit_byte(const uint8_t value)
 {
-    if(_bufptr < (_buffer + _buflen)) {
-        *_bufptr++ = value;
-    }
-    else {
-        throw std::runtime_error("bytecode buffer is full");
-    }
+    Buffer::write(static_cast<uint8_t>((value >>  0) & 0xff));
 }
 
 void ByteCode::emit_word(const uint16_t value)
 {
-    emit_byte(static_cast<uint8_t>((value >>  0) & 0xff));
-    emit_byte(static_cast<uint8_t>((value >>  8) & 0xff));
+    Buffer::write(static_cast<uint8_t>((value >>  0) & 0xff));
+    Buffer::write(static_cast<uint8_t>((value >>  8) & 0xff));
 }
 
 void ByteCode::emit_long(const uint32_t value)
 {
-    emit_byte(static_cast<uint8_t>((value >>  0) & 0xff));
-    emit_byte(static_cast<uint8_t>((value >>  8) & 0xff));
-    emit_byte(static_cast<uint8_t>((value >> 16) & 0xff));
-    emit_byte(static_cast<uint8_t>((value >> 24) & 0xff));
+    Buffer::write(static_cast<uint8_t>((value >>  0) & 0xff));
+    Buffer::write(static_cast<uint8_t>((value >>  8) & 0xff));
+    Buffer::write(static_cast<uint8_t>((value >> 16) & 0xff));
+    Buffer::write(static_cast<uint8_t>((value >> 24) & 0xff));
 }
 
 void ByteCode::emit_quad(const uint64_t value)
 {
-    emit_byte(static_cast<uint8_t>((value >>  0) & 0xff));
-    emit_byte(static_cast<uint8_t>((value >>  8) & 0xff));
-    emit_byte(static_cast<uint8_t>((value >> 16) & 0xff));
-    emit_byte(static_cast<uint8_t>((value >> 24) & 0xff));
-    emit_byte(static_cast<uint8_t>((value >> 32) & 0xff));
-    emit_byte(static_cast<uint8_t>((value >> 40) & 0xff));
-    emit_byte(static_cast<uint8_t>((value >> 48) & 0xff));
-    emit_byte(static_cast<uint8_t>((value >> 56) & 0xff));
+    Buffer::write(static_cast<uint8_t>((value >>  0) & 0xff));
+    Buffer::write(static_cast<uint8_t>((value >>  8) & 0xff));
+    Buffer::write(static_cast<uint8_t>((value >> 16) & 0xff));
+    Buffer::write(static_cast<uint8_t>((value >> 24) & 0xff));
+    Buffer::write(static_cast<uint8_t>((value >> 32) & 0xff));
+    Buffer::write(static_cast<uint8_t>((value >> 40) & 0xff));
+    Buffer::write(static_cast<uint8_t>((value >> 48) & 0xff));
+    Buffer::write(static_cast<uint8_t>((value >> 56) & 0xff));
 }
 
 void ByteCode::emit_nop()

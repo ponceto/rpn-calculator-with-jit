@@ -1,5 +1,5 @@
 /*
- * BasicBlock.h - Copyright (c) 2023 - Olivier Poncet
+ * Buffer.cc - Copyright (c) 2023 - Olivier Poncet
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,43 +14,62 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef __RPN_BasicBlock_h__
-#define __RPN_BasicBlock_h__
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+#include <cerrno>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <cstdint>
+#include <climits>
+#include <algorithm>
+#include <chrono>
+#include <memory>
+#include <string>
+#include <vector>
+#include <sstream>
+#include <iostream>
+#include <stdexcept>
+#include "Buffer.h"
 
 // ---------------------------------------------------------------------------
-// rpn::BasicBlock
+// rpn::Buffer
 // ---------------------------------------------------------------------------
 
 namespace rpn {
 
-class BasicBlock
+Buffer::Buffer()
+    : _buffer(nullptr)
+    , _bufptr(nullptr)
+    , _buflen(0)
 {
-public: // public interface
-    BasicBlock();
+}
 
-    BasicBlock(const uint8_t* begin, const uint8_t* end);
+void Buffer::reset(const uint8_t value)
+{
+    auto fill = [&](uint8_t* begin, uint8_t* end, uint8_t value) -> void
+    {
+        if((begin != nullptr) && (end != nullptr)) {
+            std::fill(begin, end, value);
+        }
+    };
 
-    BasicBlock(const BasicBlock&) = default;
+    return fill((_bufptr = _buffer), (_buffer + _buflen), value);
+}
 
-    BasicBlock& operator=(const BasicBlock&) = default;
-
-    virtual ~BasicBlock() = default;
-
-    void reset();
-
-    bool valid() const;
-
-    void execute() const;
-
-private: // private data
-    const uint8_t* _start;
-    const uint8_t* _end;
-};
+void Buffer::write(const uint8_t value)
+{
+    if(_bufptr < (_buffer + _buflen)) {
+        *_bufptr++ = value;
+    }
+    else {
+        throw std::runtime_error("buffer is full");
+    }
+}
 
 }
 
 // ---------------------------------------------------------------------------
 // End-Of-File
 // ---------------------------------------------------------------------------
-
-#endif /* __RPN_BasicBlock_h__ */

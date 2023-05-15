@@ -72,6 +72,7 @@ RPNCALC_SRCS = \
 	Runnable.cc \
 	Listener.cc \
 	Parser.cc \
+	Buffer.cc \
 	ByteCode.cc \
 	HostCode.cc \
 	Compiler.cc \
@@ -88,6 +89,7 @@ RPNCALC_HDRS = \
 	Runnable.h \
 	Listener.h \
 	Parser.h \
+	Buffer.h \
 	ByteCode.h \
 	HostCode.h \
 	Compiler.h \
@@ -104,6 +106,7 @@ RPNCALC_OBJS = \
 	Runnable.o \
 	Listener.o \
 	Parser.o \
+	Buffer.o \
 	ByteCode.o \
 	HostCode.o \
 	Compiler.o \
@@ -201,6 +204,9 @@ Listener.o : Listener.cc \
 	$(RPNCALC_HDRS)
 
 Parser.o : Parser.cc \
+	$(RPNCALC_HDRS)
+
+Buffer.o : Buffer.cc \
 	$(RPNCALC_HDRS)
 
 ByteCode.o : ByteCode.cc \

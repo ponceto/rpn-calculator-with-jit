@@ -54,20 +54,21 @@ BasicBlock::BasicBlock()
 {
 }
 
-BasicBlock::BasicBlock(const void* begin, const void* end)
-    : _begin(begin)
+BasicBlock::BasicBlock(const uint8_t* start, const uint8_t* end)
+    : _start(start)
     , _end(end)
 {
 }
 
-void BasicBlock::clear()
+void BasicBlock::reset()
 {
-    _begin = _end = nullptr;
+    _start = nullptr;
+    _end   = nullptr;
 }
 
 bool BasicBlock::valid() const
 {
-    if((_begin != nullptr) && (_end != nullptr) && (_begin < _end)) {
+    if((_start != nullptr) && (_end != nullptr) && (_start < _end)) {
         return true;
     }
     return false;
@@ -75,10 +76,13 @@ bool BasicBlock::valid() const
 
 void BasicBlock::execute() const
 {
-    FunctionPtr function = reinterpret_cast<FunctionPtr>(const_cast<void*>(_begin));
+    FunctionPtr function = reinterpret_cast<FunctionPtr>(const_cast<uint8_t*>(_start));
 
     if(function != nullptr) {
         (*function)();
+    }
+    else {
+        throw std::runtime_error("cannot execute null basic block");
     }
 }
 

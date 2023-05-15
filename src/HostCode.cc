@@ -42,9 +42,7 @@
 namespace rpn {
 
 HostCode::HostCode()
-    : _buffer(nullptr)
-    , _bufptr(nullptr)
-    , _buflen(0)
+    : Buffer()
 {
     allocate();
 }
@@ -58,27 +56,25 @@ void HostCode::allocate()
 {
     if(_buflen == 0) {
         const long buflen = ::sysconf(_SC_PAGESIZE);
-        if(buflen <= 0) {
-            throw std::runtime_error("sysconf() has failed");
+        if(buflen > 0) {
+            _buflen = buflen;
         }
         else {
-            _buflen = buflen;
+            throw std::runtime_error("sysconf() has failed");
         }
     }
     if(_buffer == nullptr) {
         const int prot   = (PROT_READ | PROT_WRITE | PROT_EXEC);
         const int flags  = (MAP_PRIVATE | MAP_ANONYMOUS);
         void*     buffer = ::mmap(nullptr, _buflen, prot, flags, -1, 0);
-        if(buffer == MAP_FAILED) {
-            throw std::runtime_error("mmap() has failed");
-        }
-        else {
+        if(buffer != MAP_FAILED) {
             _buffer = reinterpret_cast<uint8_t*>(buffer);
             _bufptr = reinterpret_cast<uint8_t*>(buffer);
+            reset();
         }
-    }
-    if(_buffer != nullptr) {
-        clear();
+        else {
+            throw std::runtime_error("mmap() has failed");
+        }
     }
 }
 
@@ -86,12 +82,12 @@ void HostCode::deallocate()
 {
     if(_buffer != nullptr) {
         const int rc = ::munmap(_buffer, _buflen);
-        if(rc != 0) {
-            throw std::runtime_error("munmap() has failed");
-        }
-        else {
+        if(rc == 0) {
             _buffer = nullptr;
             _bufptr = nullptr;
+        }
+        else {
+            throw std::runtime_error("munmap() has failed");
         }
     }
     if(_buflen != 0) {
@@ -99,52 +95,40 @@ void HostCode::deallocate()
     }
 }
 
-void HostCode::clear()
+void HostCode::reset()
 {
-    auto clear = [&](uint8_t* begin, uint8_t* end, uint8_t value) -> void
-    {
-        if((begin != nullptr) && (end != nullptr)) {
-            std::fill(begin, end, value);
-        }
-    };
-
-    return clear((_bufptr = _buffer), (_buffer + _buflen), 0xc3);
+    Buffer::reset(0xc3);
 }
 
 void HostCode::emit_byte(const uint8_t value)
 {
-    if(_bufptr < (_buffer + _buflen)) {
-        *_bufptr++ = value;
-    }
-    else {
-        throw std::runtime_error("hostcode buffer is full");
-    }
+    Buffer::write(static_cast<uint8_t>((value >>  0) & 0xff));
 }
 
 void HostCode::emit_word(const uint16_t value)
 {
-    emit_byte(static_cast<uint8_t>((value >>  0) & 0xff));
-    emit_byte(static_cast<uint8_t>((value >>  8) & 0xff));
+    Buffer::write(static_cast<uint8_t>((value >>  0) & 0xff));
+    Buffer::write(static_cast<uint8_t>((value >>  8) & 0xff));
 }
 
 void HostCode::emit_long(const uint32_t value)
 {
-    emit_byte(static_cast<uint8_t>((value >>  0) & 0xff));
-    emit_byte(static_cast<uint8_t>((value >>  8) & 0xff));
-    emit_byte(static_cast<uint8_t>((value >> 16) & 0xff));
-    emit_byte(static_cast<uint8_t>((value >> 24) & 0xff));
+    Buffer::write(static_cast<uint8_t>((value >>  0) & 0xff));
+    Buffer::write(static_cast<uint8_t>((value >>  8) & 0xff));
+    Buffer::write(static_cast<uint8_t>((value >> 16) & 0xff));
+    Buffer::write(static_cast<uint8_t>((value >> 24) & 0xff));
 }
 
 void HostCode::emit_quad(const uint64_t value)
 {
-    emit_byte(static_cast<uint8_t>((value >>  0) & 0xff));
-    emit_byte(static_cast<uint8_t>((value >>  8) & 0xff));
-    emit_byte(static_cast<uint8_t>((value >> 16) & 0xff));
-    emit_byte(static_cast<uint8_t>((value >> 24) & 0xff));
-    emit_byte(static_cast<uint8_t>((value >> 32) & 0xff));
-    emit_byte(static_cast<uint8_t>((value >> 40) & 0xff));
-    emit_byte(static_cast<uint8_t>((value >> 48) & 0xff));
-    emit_byte(static_cast<uint8_t>((value >> 56) & 0xff));
+    Buffer::write(static_cast<uint8_t>((value >>  0) & 0xff));
+    Buffer::write(static_cast<uint8_t>((value >>  8) & 0xff));
+    Buffer::write(static_cast<uint8_t>((value >> 16) & 0xff));
+    Buffer::write(static_cast<uint8_t>((value >> 24) & 0xff));
+    Buffer::write(static_cast<uint8_t>((value >> 32) & 0xff));
+    Buffer::write(static_cast<uint8_t>((value >> 40) & 0xff));
+    Buffer::write(static_cast<uint8_t>((value >> 48) & 0xff));
+    Buffer::write(static_cast<uint8_t>((value >> 56) & 0xff));
 }
 
 void HostCode::nop()

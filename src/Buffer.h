@@ -1,5 +1,5 @@
 /*
- * BasicBlock.h - Copyright (c) 2023 - Olivier Poncet
+ * Buffer.h - Copyright (c) 2023 - Olivier Poncet
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,37 +14,44 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef __RPN_BasicBlock_h__
-#define __RPN_BasicBlock_h__
+#ifndef __RPN_Buffer_h__
+#define __RPN_Buffer_h__
 
 // ---------------------------------------------------------------------------
-// rpn::BasicBlock
+// rpn::Buffer
 // ---------------------------------------------------------------------------
 
 namespace rpn {
 
-class BasicBlock
+class Buffer
 {
 public: // public interface
-    BasicBlock();
+    Buffer();
 
-    BasicBlock(const uint8_t* begin, const uint8_t* end);
+    Buffer(const Buffer&) = delete;
 
-    BasicBlock(const BasicBlock&) = default;
+    Buffer& operator=(const Buffer&) = delete;
 
-    BasicBlock& operator=(const BasicBlock&) = default;
+    virtual ~Buffer() = default;
 
-    virtual ~BasicBlock() = default;
+    const uint8_t* begin() const
+    {
+        return _buffer;
+    }
 
-    void reset();
+    const uint8_t* end() const
+    {
+        return _bufptr;
+    }
 
-    bool valid() const;
+    void reset(const uint8_t value);
 
-    void execute() const;
+    void write(const uint8_t value);
 
-private: // private data
-    const uint8_t* _start;
-    const uint8_t* _end;
+protected: // protected data
+    uint8_t* _buffer;
+    uint8_t* _bufptr;
+    size_t   _buflen;
 };
 
 }
@@ -53,4 +60,4 @@ private: // private data
 // End-Of-File
 // ---------------------------------------------------------------------------
 
-#endif /* __RPN_BasicBlock_h__ */
+#endif /* __RPN_Buffer_h__ */

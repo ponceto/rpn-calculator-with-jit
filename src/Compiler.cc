@@ -45,8 +45,8 @@ Compiler::Compiler(ByteCode& bytecode, HostCode& hostcode)
     , _bytecode(bytecode)
     , _hostcode(hostcode)
 {
-    _bytecode.clear();
-    _hostcode.clear();
+    _bytecode.reset();
+    _hostcode.reset();
 }
 
 void Compiler::compile(std::istream& stream)

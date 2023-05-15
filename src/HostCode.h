@@ -17,13 +17,16 @@
 #ifndef __RPN_HostCode_h__
 #define __RPN_HostCode_h__
 
+#include "Buffer.h"
+
 // ---------------------------------------------------------------------------
 // rpn::HostCode
 // ---------------------------------------------------------------------------
 
 namespace rpn {
 
-class HostCode
+class HostCode final
+    : public Buffer
 {
 public: // public interface
     HostCode();
@@ -34,17 +37,7 @@ public: // public interface
 
     virtual ~HostCode();
 
-    const uint8_t* begin() const
-    {
-        return _buffer;
-    }
-
-    const uint8_t* end() const
-    {
-        return _bufptr;
-    }
-
-    void clear();
+    void reset();
 
     void emit_byte(const uint8_t value);
 
@@ -80,11 +73,6 @@ private: // private interface
     void allocate();
 
     void deallocate();
-
-private: // private data
-    uint8_t* _buffer;
-    uint8_t* _bufptr;
-    size_t   _buflen;
 };
 
 }
