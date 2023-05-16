@@ -19,7 +19,7 @@
 # global environment
 # ----------------------------------------------------------------------------
 
-FLAGS    = -g -O2 -Wall -fno-inline -fno-omit-frame-pointer
+FLAGS    = -g -Og -Wall
 CC       = gcc
 CFLAGS   = -std=c99 $(FLAGS)
 CXX      = g++
