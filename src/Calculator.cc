@@ -35,6 +35,23 @@
 #include "Calculator.h"
 
 // ---------------------------------------------------------------------------
+// rpn::VirtualMachine
+// ---------------------------------------------------------------------------
+
+namespace rpn {
+
+struct VirtualMachine
+{
+    static void execute(Calculator&, Operands&, ByteCode&, HostCode&, const std::string& expression);
+
+    static void compile(Calculator&, Operands&, ByteCode&, HostCode&, const std::string& expression);
+
+    static void run(Calculator&, Operands&, ByteCode&, HostCode&);
+};
+
+}
+
+// ---------------------------------------------------------------------------
 // rpn::Calculator
 // ---------------------------------------------------------------------------
 
@@ -54,8 +71,7 @@ void Calculator::execute(const std::string& expression)
 {
     log_print(std::string("executing expression") + ' ' + '<' + expression + '>');
     try {
-        Parser parser(*this);
-        parser.parse(expression);
+        VirtualMachine::execute(*this, _operands, _bytecode, _hostcode, expression);
     }
     catch(const std::runtime_error& e) {
         log_error("error while executing!");
@@ -68,8 +84,7 @@ void Calculator::compile(const std::string& expression)
 {
     log_print(std::string("compiling expression") + ' ' + '<' + expression + '>');
     try {
-        Compiler compiler(_bytecode, _hostcode);
-        compiler.compile(expression);
+        VirtualMachine::compile(*this, _operands, _bytecode, _hostcode, expression);
     }
     catch(const std::runtime_error& e) {
         log_error("error while compiling!");
@@ -82,7 +97,7 @@ void Calculator::run()
 {
     log_print("running the compiled expression...");
     try {
-        op_run();
+        VirtualMachine::run(*this, _operands, _bytecode, _hostcode);
     }
     catch(const std::runtime_error& e) {
         log_error("error while running!");
@@ -231,650 +246,7 @@ void Calculator::op_dec()
 
 void Calculator::op_run()
 {
-    auto& rpn(*this);
-    auto& jit(_hostcode);
-    BasicBlock basic_block(jit.begin(), jit.end());
-
-    auto exec_nop = [&]() -> void
-    {
-        rpn.log_debug("exec <nop>");
-        rpn.op_nop();
-    };
-
-    auto exec_i64 = [&](const int64_t operand) -> void
-    {
-        rpn.log_debug("exec <i64>");
-        rpn.op_i64(operand);
-    };
-
-    auto exec_top = [&]() -> void
-    {
-        rpn.log_debug("exec <top>");
-        rpn.op_top();
-    };
-
-    auto exec_pop = [&]() -> void
-    {
-        rpn.log_debug("exec <pop>");
-        rpn.op_pop();
-    };
-
-    auto exec_clr = [&]() -> void
-    {
-        rpn.log_debug("exec <clr>");
-        rpn.op_clr();
-    };
-
-    auto exec_dup = [&]() -> void
-    {
-        rpn.log_debug("exec <dup>");
-        rpn.op_dup();
-    };
-
-    auto exec_xch = [&]() -> void
-    {
-        rpn.log_debug("exec <xch>");
-        rpn.op_xch();
-    };
-
-    auto exec_sto = [&]() -> void
-    {
-        rpn.log_debug("exec <sto>");
-        rpn.op_sto();
-    };
-
-    auto exec_rcl = [&]() -> void
-    {
-        rpn.log_debug("exec <rcl>");
-        rpn.op_rcl();
-    };
-
-    auto exec_abs = [&]() -> void
-    {
-        rpn.log_debug("exec <abs>");
-        rpn.op_abs();
-    };
-
-    auto exec_neg = [&]() -> void
-    {
-        rpn.log_debug("exec <neg>");
-        rpn.op_neg();
-    };
-
-    auto exec_add = [&]() -> void
-    {
-        rpn.log_debug("exec <add>");
-        rpn.op_add();
-    };
-
-    auto exec_sub = [&]() -> void
-    {
-        rpn.log_debug("exec <sub>");
-        rpn.op_sub();
-    };
-
-    auto exec_mul = [&]() -> void
-    {
-        rpn.log_debug("exec <mul>");
-        rpn.op_mul();
-    };
-
-    auto exec_div = [&]() -> void
-    {
-        rpn.log_debug("exec <div>");
-        rpn.op_div();
-    };
-
-    auto exec_mod = [&]() -> void
-    {
-        rpn.log_debug("exec <mod>");
-        rpn.op_mod();
-    };
-
-    auto exec_cpl = [&]() -> void
-    {
-        rpn.log_debug("exec <cpl>");
-        rpn.op_cpl();
-    };
-
-    auto exec_and = [&]() -> void
-    {
-        rpn.log_debug("exec <and>");
-        rpn.op_and();
-    };
-
-    auto exec_ior = [&]() -> void
-    {
-        rpn.log_debug("exec <ior>");
-        rpn.op_ior();
-    };
-
-    auto exec_xor = [&]() -> void
-    {
-        rpn.log_debug("exec <xor>");
-        rpn.op_xor();
-    };
-
-    auto exec_shl = [&]() -> void
-    {
-        rpn.log_debug("exec <shl>");
-        rpn.op_shl();
-    };
-
-    auto exec_shr = [&]() -> void
-    {
-        rpn.log_debug("exec <shr>");
-        rpn.op_shr();
-    };
-
-    auto exec_inc = [&]() -> void
-    {
-        rpn.log_debug("exec <inc>");
-        rpn.op_inc();
-    };
-
-    auto exec_dec = [&]() -> void
-    {
-        rpn.log_debug("exec <dec>");
-        rpn.op_dec();
-    };
-
-    auto emit_prolog = [&]() -> void
-    {
-        rpn.log_debug("emit <function prolog>");
-        jit.push_rbp();
-        jit.mov_rbp_rsp();
-    };
-
-    auto emit_epilog = [&]() -> void
-    {
-        rpn.log_debug("emit <function epilog>");
-        jit.mov_rsp_rbp();
-        jit.pop_rbp();
-        jit.ret();
-    };
-
-    auto emit_nop = [&]() -> void
-    {
-        rpn.log_debug("emit <nop>");
-        jit.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&_operands));
-        jit.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_nop));
-        jit.call_rax();
-    };
-
-    auto emit_i64 = [&](const int64_t operand) -> void
-    {
-        rpn.log_debug("emit <i64>");
-        jit.mov_rsi_imm64(operand);
-        jit.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&_operands));
-        jit.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_i64));
-        jit.call_rax();
-    };
-
-    auto emit_top = [&]() -> void
-    {
-        rpn.log_debug("emit <top>");
-        jit.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&_operands));
-        jit.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_top));
-        jit.call_rax();
-    };
-
-    auto emit_pop = [&]() -> void
-    {
-        rpn.log_debug("emit <pop>");
-        jit.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&_operands));
-        jit.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_pop));
-        jit.call_rax();
-    };
-
-    auto emit_clr = [&]() -> void
-    {
-        rpn.log_debug("emit <clr>");
-        jit.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&_operands));
-        jit.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_clr));
-        jit.call_rax();
-    };
-
-    auto emit_dup = [&]() -> void
-    {
-        rpn.log_debug("emit <dup>");
-        jit.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&_operands));
-        jit.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_dup));
-        jit.call_rax();
-    };
-
-    auto emit_xch = [&]() -> void
-    {
-        rpn.log_debug("emit <xch>");
-        jit.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&_operands));
-        jit.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_xch));
-        jit.call_rax();
-    };
-
-    auto emit_sto = [&]() -> void
-    {
-        rpn.log_debug("emit <sto>");
-        jit.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&_operands));
-        jit.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_sto));
-        jit.call_rax();
-    };
-
-    auto emit_rcl = [&]() -> void
-    {
-        rpn.log_debug("emit <rcl>");
-        jit.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&_operands));
-        jit.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_rcl));
-        jit.call_rax();
-    };
-
-    auto emit_abs = [&]() -> void
-    {
-        rpn.log_debug("emit <abs>");
-        jit.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&_operands));
-        jit.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_abs));
-        jit.call_rax();
-    };
-
-    auto emit_neg = [&]() -> void
-    {
-        rpn.log_debug("emit <neg>");
-        jit.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&_operands));
-        jit.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_neg));
-        jit.call_rax();
-    };
-
-    auto emit_add = [&]() -> void
-    {
-        rpn.log_debug("emit <add>");
-        jit.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&_operands));
-        jit.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_add));
-        jit.call_rax();
-    };
-
-    auto emit_sub = [&]() -> void
-    {
-        rpn.log_debug("emit <sub>");
-        jit.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&_operands));
-        jit.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_sub));
-        jit.call_rax();
-    };
-
-    auto emit_mul = [&]() -> void
-    {
-        rpn.log_debug("emit <mul>");
-        jit.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&_operands));
-        jit.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_mul));
-        jit.call_rax();
-    };
-
-    auto emit_div = [&]() -> void
-    {
-        rpn.log_debug("emit <div>");
-        jit.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&_operands));
-        jit.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_div));
-        jit.call_rax();
-    };
-
-    auto emit_mod = [&]() -> void
-    {
-        rpn.log_debug("emit <mod>");
-        jit.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&_operands));
-        jit.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_mod));
-        jit.call_rax();
-    };
-
-    auto emit_cpl = [&]() -> void
-    {
-        rpn.log_debug("emit <cpl>");
-        jit.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&_operands));
-        jit.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_cpl));
-        jit.call_rax();
-    };
-
-    auto emit_and = [&]() -> void
-    {
-        rpn.log_debug("emit <and>");
-        jit.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&_operands));
-        jit.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_and));
-        jit.call_rax();
-    };
-
-    auto emit_ior = [&]() -> void
-    {
-        rpn.log_debug("emit <ior>");
-        jit.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&_operands));
-        jit.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_ior));
-        jit.call_rax();
-    };
-
-    auto emit_xor = [&]() -> void
-    {
-        rpn.log_debug("emit <xor>");
-        jit.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&_operands));
-        jit.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_xor));
-        jit.call_rax();
-    };
-
-    auto emit_shl = [&]() -> void
-    {
-        rpn.log_debug("emit <shl>");
-        jit.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&_operands));
-        jit.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_shl));
-        jit.call_rax();
-    };
-
-    auto emit_shr = [&]() -> void
-    {
-        rpn.log_debug("emit <shr>");
-        jit.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&_operands));
-        jit.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_shr));
-        jit.call_rax();
-    };
-
-    auto emit_inc = [&]() -> void
-    {
-        rpn.log_debug("emit <inc>");
-        jit.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&_operands));
-        jit.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_inc));
-        jit.call_rax();
-    };
-
-    auto emit_dec = [&]() -> void
-    {
-        rpn.log_debug("emit <dec>");
-        jit.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&_operands));
-        jit.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_dec));
-        jit.call_rax();
-    };
-
-    auto prolog = [&]() -> void
-    {
-        emit_prolog();
-    };
-
-    auto epilog = [&]() -> void
-    {
-        emit_epilog();
-    };
-
-    auto do_nop = [&](const uint8_t& opcode) -> int
-    {
-        exec_nop();
-        emit_nop();
-        return 0;
-    };
-
-    auto do_i64 = [&](const uint8_t& opcode) -> int
-    {
-        int64_t operand = 0;
-        operand = ((operand << 8) | (&opcode)[8]);
-        operand = ((operand << 8) | (&opcode)[7]);
-        operand = ((operand << 8) | (&opcode)[6]);
-        operand = ((operand << 8) | (&opcode)[5]);
-        operand = ((operand << 8) | (&opcode)[4]);
-        operand = ((operand << 8) | (&opcode)[3]);
-        operand = ((operand << 8) | (&opcode)[2]);
-        operand = ((operand << 8) | (&opcode)[1]);
-        exec_i64(operand);
-        emit_i64(operand);
-        return 8;
-    };
-
-    auto do_top = [&](const uint8_t& opcode) -> int
-    {
-        exec_top();
-        emit_top();
-        return 0;
-    };
-
-    auto do_pop = [&](const uint8_t& opcode) -> int
-    {
-        exec_pop();
-        emit_pop();
-        return 0;
-    };
-
-    auto do_clr = [&](const uint8_t& opcode) -> int
-    {
-        exec_clr();
-        emit_clr();
-        return 0;
-    };
-
-    auto do_dup = [&](const uint8_t& opcode) -> int
-    {
-        exec_dup();
-        emit_dup();
-        return 0;
-    };
-
-    auto do_xch = [&](const uint8_t& opcode) -> int
-    {
-        exec_xch();
-        emit_xch();
-        return 0;
-    };
-
-    auto do_sto = [&](const uint8_t& opcode) -> int
-    {
-        exec_sto();
-        emit_sto();
-        return 0;
-    };
-
-    auto do_rcl = [&](const uint8_t& opcode) -> int
-    {
-        exec_rcl();
-        emit_rcl();
-        return 0;
-    };
-
-    auto do_abs = [&](const uint8_t& opcode) -> int
-    {
-        exec_abs();
-        emit_abs();
-        return 0;
-    };
-
-    auto do_add = [&](const uint8_t& opcode) -> int
-    {
-        exec_add();
-        emit_add();
-        return 0;
-    };
-
-    auto do_sub = [&](const uint8_t& opcode) -> int
-    {
-        exec_sub();
-        emit_sub();
-        return 0;
-    };
-
-    auto do_mul = [&](const uint8_t& opcode) -> int
-    {
-        exec_mul();
-        emit_mul();
-        return 0;
-    };
-
-    auto do_div = [&](const uint8_t& opcode) -> int
-    {
-        exec_div();
-        emit_div();
-        return 0;
-    };
-
-    auto do_mod = [&](const uint8_t& opcode) -> int
-    {
-        exec_mod();
-        emit_mod();
-        return 0;
-    };
-
-    auto do_cpl = [&](const uint8_t& opcode) -> int
-    {
-        exec_cpl();
-        emit_cpl();
-        return 0;
-    };
-
-    auto do_and = [&](const uint8_t& opcode) -> int
-    {
-        exec_and();
-        emit_and();
-        return 0;
-    };
-
-    auto do_ior = [&](const uint8_t& opcode) -> int
-    {
-        exec_ior();
-        emit_ior();
-        return 0;
-    };
-
-    auto do_xor = [&](const uint8_t& opcode) -> int
-    {
-        exec_xor();
-        emit_xor();
-        return 0;
-    };
-
-    auto do_shl = [&](const uint8_t& opcode) -> int
-    {
-        exec_shl();
-        emit_shl();
-        return 0;
-    };
-
-    auto do_shr = [&](const uint8_t& opcode) -> int
-    {
-        exec_shr();
-        emit_shr();
-        return 0;
-    };
-
-    auto do_inc = [&](const uint8_t& opcode) -> int
-    {
-        exec_inc();
-        emit_inc();
-        return 0;
-    };
-
-    auto do_dec = [&](const uint8_t& opcode) -> int
-    {
-        exec_dec();
-        emit_dec();
-        return 0;
-    };
-
-    auto do_neg = [&](const uint8_t& opcode) -> int
-    {
-        exec_neg();
-        emit_neg();
-        return 0;
-    };
-
-    auto translate = [&]() -> void
-    {
-        prolog();
-        int skip = 0;
-        for(const uint8_t& opcode : _bytecode) {
-            if(skip > 0) {
-                --skip;
-            }
-            else switch(opcode) {
-                case ByteCode::OP_NOP:
-                    skip = do_nop(opcode);
-                    break;
-                case ByteCode::OP_I64:
-                    skip = do_i64(opcode);
-                    break;
-                case ByteCode::OP_TOP:
-                    skip = do_top(opcode);
-                    break;
-                case ByteCode::OP_POP:
-                    skip = do_pop(opcode);
-                    break;
-                case ByteCode::OP_CLR:
-                    skip = do_clr(opcode);
-                    break;
-                case ByteCode::OP_DUP:
-                    skip = do_dup(opcode);
-                    break;
-                case ByteCode::OP_XCH:
-                    skip = do_xch(opcode);
-                    break;
-                case ByteCode::OP_STO:
-                    skip = do_sto(opcode);
-                    break;
-                case ByteCode::OP_RCL:
-                    skip = do_rcl(opcode);
-                    break;
-                case ByteCode::OP_ABS:
-                    skip = do_abs(opcode);
-                    break;
-                case ByteCode::OP_NEG:
-                    skip = do_neg(opcode);
-                    break;
-                case ByteCode::OP_ADD:
-                    skip = do_add(opcode);
-                    break;
-                case ByteCode::OP_SUB:
-                    skip = do_sub(opcode);
-                    break;
-                case ByteCode::OP_MUL:
-                    skip = do_mul(opcode);
-                    break;
-                case ByteCode::OP_DIV:
-                    skip = do_div(opcode);
-                    break;
-                case ByteCode::OP_MOD:
-                    skip = do_mod(opcode);
-                    break;
-                case ByteCode::OP_CPL:
-                    skip = do_cpl(opcode);
-                    break;
-                case ByteCode::OP_AND:
-                    skip = do_and(opcode);
-                    break;
-                case ByteCode::OP_IOR:
-                    skip = do_ior(opcode);
-                    break;
-                case ByteCode::OP_XOR:
-                    skip = do_xor(opcode);
-                    break;
-                case ByteCode::OP_SHL:
-                    skip = do_shl(opcode);
-                    break;
-                case ByteCode::OP_SHR:
-                    skip = do_shr(opcode);
-                    break;
-                case ByteCode::OP_INC:
-                    skip = do_inc(opcode);
-                    break;
-                case ByteCode::OP_DEC:
-                    skip = do_dec(opcode);
-                    break;
-                default:
-                    throw std::runtime_error("unexpected bytecode");
-            }
-        }
-        epilog();
-    };
-
-    auto execute = [&]() -> void
-    {
-        if(basic_block.valid()) {
-            log_trace("the bytecode has already been translated, executing the generated machine code...");
-            basic_block.execute();
-        }
-        else {
-            log_trace("the bytecode has never been translated, executing bytecode and translating to machine code...");
-            translate();
-        }
-    };
-
-    return execute();
+    VirtualMachine::run(*this, _operands, _bytecode, _hostcode);
 }
 
 void Calculator::log_debug(const std::string& message)
@@ -935,6 +307,676 @@ void Calculator::log_result()
     catch(...) {
         _console.log_print(std::string("no result") + ' ' + "<empty stack>");
     }
+}
+
+}
+
+// ---------------------------------------------------------------------------
+// rpn::VirtualMachine
+// ---------------------------------------------------------------------------
+
+namespace rpn {
+
+void VirtualMachine::execute(Calculator& calculator, Operands& operands, ByteCode& bytecode, HostCode& hostcode, const std::string& expression)
+{
+    Parser parser(calculator);
+
+    parser.parse(expression);
+}
+
+void VirtualMachine::compile(Calculator& calculator, Operands& operands, ByteCode& bytecode, HostCode& hostcode, const std::string& expression)
+{
+    Compiler compiler(bytecode, hostcode);
+
+    compiler.compile(expression);
+}
+
+void VirtualMachine::run(Calculator& calculator, Operands& operands, ByteCode& bytecode, HostCode& hostcode)
+{
+    auto& jit(hostcode);
+
+    auto exec_nop = [&]() -> void
+    {
+        calculator.log_debug("exec <nop>");
+        calculator.op_nop();
+    };
+
+    auto exec_i64 = [&](const int64_t operand) -> void
+    {
+        calculator.log_debug("exec <i64>");
+        calculator.op_i64(operand);
+    };
+
+    auto exec_top = [&]() -> void
+    {
+        calculator.log_debug("exec <top>");
+        calculator.op_top();
+    };
+
+    auto exec_pop = [&]() -> void
+    {
+        calculator.log_debug("exec <pop>");
+        calculator.op_pop();
+    };
+
+    auto exec_clr = [&]() -> void
+    {
+        calculator.log_debug("exec <clr>");
+        calculator.op_clr();
+    };
+
+    auto exec_dup = [&]() -> void
+    {
+        calculator.log_debug("exec <dup>");
+        calculator.op_dup();
+    };
+
+    auto exec_xch = [&]() -> void
+    {
+        calculator.log_debug("exec <xch>");
+        calculator.op_xch();
+    };
+
+    auto exec_sto = [&]() -> void
+    {
+        calculator.log_debug("exec <sto>");
+        calculator.op_sto();
+    };
+
+    auto exec_rcl = [&]() -> void
+    {
+        calculator.log_debug("exec <rcl>");
+        calculator.op_rcl();
+    };
+
+    auto exec_abs = [&]() -> void
+    {
+        calculator.log_debug("exec <abs>");
+        calculator.op_abs();
+    };
+
+    auto exec_neg = [&]() -> void
+    {
+        calculator.log_debug("exec <neg>");
+        calculator.op_neg();
+    };
+
+    auto exec_add = [&]() -> void
+    {
+        calculator.log_debug("exec <add>");
+        calculator.op_add();
+    };
+
+    auto exec_sub = [&]() -> void
+    {
+        calculator.log_debug("exec <sub>");
+        calculator.op_sub();
+    };
+
+    auto exec_mul = [&]() -> void
+    {
+        calculator.log_debug("exec <mul>");
+        calculator.op_mul();
+    };
+
+    auto exec_div = [&]() -> void
+    {
+        calculator.log_debug("exec <div>");
+        calculator.op_div();
+    };
+
+    auto exec_mod = [&]() -> void
+    {
+        calculator.log_debug("exec <mod>");
+        calculator.op_mod();
+    };
+
+    auto exec_cpl = [&]() -> void
+    {
+        calculator.log_debug("exec <cpl>");
+        calculator.op_cpl();
+    };
+
+    auto exec_and = [&]() -> void
+    {
+        calculator.log_debug("exec <and>");
+        calculator.op_and();
+    };
+
+    auto exec_ior = [&]() -> void
+    {
+        calculator.log_debug("exec <ior>");
+        calculator.op_ior();
+    };
+
+    auto exec_xor = [&]() -> void
+    {
+        calculator.log_debug("exec <xor>");
+        calculator.op_xor();
+    };
+
+    auto exec_shl = [&]() -> void
+    {
+        calculator.log_debug("exec <shl>");
+        calculator.op_shl();
+    };
+
+    auto exec_shr = [&]() -> void
+    {
+        calculator.log_debug("exec <shr>");
+        calculator.op_shr();
+    };
+
+    auto exec_inc = [&]() -> void
+    {
+        calculator.log_debug("exec <inc>");
+        calculator.op_inc();
+    };
+
+    auto exec_dec = [&]() -> void
+    {
+        calculator.log_debug("exec <dec>");
+        calculator.op_dec();
+    };
+
+    auto emit_prolog = [&]() -> void
+    {
+        calculator.log_debug("emit <function prolog>");
+        jit.push_rbp();
+        jit.mov_rbp_rsp();
+    };
+
+    auto emit_epilog = [&]() -> void
+    {
+        calculator.log_debug("emit <function epilog>");
+        jit.mov_rsp_rbp();
+        jit.pop_rbp();
+        jit.ret();
+    };
+
+    auto emit_nop = [&]() -> void
+    {
+        calculator.log_debug("emit <nop>");
+        jit.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&operands));
+        jit.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_nop));
+        jit.call_rax();
+    };
+
+    auto emit_i64 = [&](const int64_t operand) -> void
+    {
+        calculator.log_debug("emit <i64>");
+        jit.mov_rsi_imm64(operand);
+        jit.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&operands));
+        jit.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_i64));
+        jit.call_rax();
+    };
+
+    auto emit_top = [&]() -> void
+    {
+        calculator.log_debug("emit <top>");
+        jit.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&operands));
+        jit.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_top));
+        jit.call_rax();
+    };
+
+    auto emit_pop = [&]() -> void
+    {
+        calculator.log_debug("emit <pop>");
+        jit.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&operands));
+        jit.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_pop));
+        jit.call_rax();
+    };
+
+    auto emit_clr = [&]() -> void
+    {
+        calculator.log_debug("emit <clr>");
+        jit.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&operands));
+        jit.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_clr));
+        jit.call_rax();
+    };
+
+    auto emit_dup = [&]() -> void
+    {
+        calculator.log_debug("emit <dup>");
+        jit.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&operands));
+        jit.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_dup));
+        jit.call_rax();
+    };
+
+    auto emit_xch = [&]() -> void
+    {
+        calculator.log_debug("emit <xch>");
+        jit.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&operands));
+        jit.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_xch));
+        jit.call_rax();
+    };
+
+    auto emit_sto = [&]() -> void
+    {
+        calculator.log_debug("emit <sto>");
+        jit.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&operands));
+        jit.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_sto));
+        jit.call_rax();
+    };
+
+    auto emit_rcl = [&]() -> void
+    {
+        calculator.log_debug("emit <rcl>");
+        jit.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&operands));
+        jit.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_rcl));
+        jit.call_rax();
+    };
+
+    auto emit_abs = [&]() -> void
+    {
+        calculator.log_debug("emit <abs>");
+        jit.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&operands));
+        jit.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_abs));
+        jit.call_rax();
+    };
+
+    auto emit_neg = [&]() -> void
+    {
+        calculator.log_debug("emit <neg>");
+        jit.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&operands));
+        jit.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_neg));
+        jit.call_rax();
+    };
+
+    auto emit_add = [&]() -> void
+    {
+        calculator.log_debug("emit <add>");
+        jit.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&operands));
+        jit.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_add));
+        jit.call_rax();
+    };
+
+    auto emit_sub = [&]() -> void
+    {
+        calculator.log_debug("emit <sub>");
+        jit.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&operands));
+        jit.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_sub));
+        jit.call_rax();
+    };
+
+    auto emit_mul = [&]() -> void
+    {
+        calculator.log_debug("emit <mul>");
+        jit.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&operands));
+        jit.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_mul));
+        jit.call_rax();
+    };
+
+    auto emit_div = [&]() -> void
+    {
+        calculator.log_debug("emit <div>");
+        jit.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&operands));
+        jit.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_div));
+        jit.call_rax();
+    };
+
+    auto emit_mod = [&]() -> void
+    {
+        calculator.log_debug("emit <mod>");
+        jit.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&operands));
+        jit.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_mod));
+        jit.call_rax();
+    };
+
+    auto emit_cpl = [&]() -> void
+    {
+        calculator.log_debug("emit <cpl>");
+        jit.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&operands));
+        jit.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_cpl));
+        jit.call_rax();
+    };
+
+    auto emit_and = [&]() -> void
+    {
+        calculator.log_debug("emit <and>");
+        jit.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&operands));
+        jit.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_and));
+        jit.call_rax();
+    };
+
+    auto emit_ior = [&]() -> void
+    {
+        calculator.log_debug("emit <ior>");
+        jit.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&operands));
+        jit.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_ior));
+        jit.call_rax();
+    };
+
+    auto emit_xor = [&]() -> void
+    {
+        calculator.log_debug("emit <xor>");
+        jit.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&operands));
+        jit.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_xor));
+        jit.call_rax();
+    };
+
+    auto emit_shl = [&]() -> void
+    {
+        calculator.log_debug("emit <shl>");
+        jit.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&operands));
+        jit.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_shl));
+        jit.call_rax();
+    };
+
+    auto emit_shr = [&]() -> void
+    {
+        calculator.log_debug("emit <shr>");
+        jit.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&operands));
+        jit.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_shr));
+        jit.call_rax();
+    };
+
+    auto emit_inc = [&]() -> void
+    {
+        calculator.log_debug("emit <inc>");
+        jit.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&operands));
+        jit.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_inc));
+        jit.call_rax();
+    };
+
+    auto emit_dec = [&]() -> void
+    {
+        calculator.log_debug("emit <dec>");
+        jit.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&operands));
+        jit.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_dec));
+        jit.call_rax();
+    };
+
+    auto prolog = [&]() -> void
+    {
+        emit_prolog();
+    };
+
+    auto epilog = [&]() -> void
+    {
+        emit_epilog();
+    };
+
+    auto op_nop = [&](const uint8_t& opcode) -> int
+    {
+        exec_nop();
+        emit_nop();
+        return 0;
+    };
+
+    auto op_i64 = [&](const uint8_t& opcode) -> int
+    {
+        int64_t operand = 0;
+        operand = ((operand << 8) | (&opcode)[8]);
+        operand = ((operand << 8) | (&opcode)[7]);
+        operand = ((operand << 8) | (&opcode)[6]);
+        operand = ((operand << 8) | (&opcode)[5]);
+        operand = ((operand << 8) | (&opcode)[4]);
+        operand = ((operand << 8) | (&opcode)[3]);
+        operand = ((operand << 8) | (&opcode)[2]);
+        operand = ((operand << 8) | (&opcode)[1]);
+        exec_i64(operand);
+        emit_i64(operand);
+        return 8;
+    };
+
+    auto op_top = [&](const uint8_t& opcode) -> int
+    {
+        exec_top();
+        emit_top();
+        return 0;
+    };
+
+    auto op_pop = [&](const uint8_t& opcode) -> int
+    {
+        exec_pop();
+        emit_pop();
+        return 0;
+    };
+
+    auto op_clr = [&](const uint8_t& opcode) -> int
+    {
+        exec_clr();
+        emit_clr();
+        return 0;
+    };
+
+    auto op_dup = [&](const uint8_t& opcode) -> int
+    {
+        exec_dup();
+        emit_dup();
+        return 0;
+    };
+
+    auto op_xch = [&](const uint8_t& opcode) -> int
+    {
+        exec_xch();
+        emit_xch();
+        return 0;
+    };
+
+    auto op_sto = [&](const uint8_t& opcode) -> int
+    {
+        exec_sto();
+        emit_sto();
+        return 0;
+    };
+
+    auto op_rcl = [&](const uint8_t& opcode) -> int
+    {
+        exec_rcl();
+        emit_rcl();
+        return 0;
+    };
+
+    auto op_abs = [&](const uint8_t& opcode) -> int
+    {
+        exec_abs();
+        emit_abs();
+        return 0;
+    };
+
+    auto op_neg = [&](const uint8_t& opcode) -> int
+    {
+        exec_neg();
+        emit_neg();
+        return 0;
+    };
+
+    auto op_add = [&](const uint8_t& opcode) -> int
+    {
+        exec_add();
+        emit_add();
+        return 0;
+    };
+
+    auto op_sub = [&](const uint8_t& opcode) -> int
+    {
+        exec_sub();
+        emit_sub();
+        return 0;
+    };
+
+    auto op_mul = [&](const uint8_t& opcode) -> int
+    {
+        exec_mul();
+        emit_mul();
+        return 0;
+    };
+
+    auto op_div = [&](const uint8_t& opcode) -> int
+    {
+        exec_div();
+        emit_div();
+        return 0;
+    };
+
+    auto op_mod = [&](const uint8_t& opcode) -> int
+    {
+        exec_mod();
+        emit_mod();
+        return 0;
+    };
+
+    auto op_cpl = [&](const uint8_t& opcode) -> int
+    {
+        exec_cpl();
+        emit_cpl();
+        return 0;
+    };
+
+    auto op_and = [&](const uint8_t& opcode) -> int
+    {
+        exec_and();
+        emit_and();
+        return 0;
+    };
+
+    auto op_ior = [&](const uint8_t& opcode) -> int
+    {
+        exec_ior();
+        emit_ior();
+        return 0;
+    };
+
+    auto op_xor = [&](const uint8_t& opcode) -> int
+    {
+        exec_xor();
+        emit_xor();
+        return 0;
+    };
+
+    auto op_shl = [&](const uint8_t& opcode) -> int
+    {
+        exec_shl();
+        emit_shl();
+        return 0;
+    };
+
+    auto op_shr = [&](const uint8_t& opcode) -> int
+    {
+        exec_shr();
+        emit_shr();
+        return 0;
+    };
+
+    auto op_inc = [&](const uint8_t& opcode) -> int
+    {
+        exec_inc();
+        emit_inc();
+        return 0;
+    };
+
+    auto op_dec = [&](const uint8_t& opcode) -> int
+    {
+        exec_dec();
+        emit_dec();
+        return 0;
+    };
+
+    auto translate = [&]() -> void
+    {
+        prolog();
+        int skip = 0;
+        for(const uint8_t& opcode : bytecode) {
+            if(skip > 0) {
+                --skip;
+            }
+            else switch(opcode) {
+                case ByteCode::OP_NOP:
+                    skip = op_nop(opcode);
+                    break;
+                case ByteCode::OP_I64:
+                    skip = op_i64(opcode);
+                    break;
+                case ByteCode::OP_TOP:
+                    skip = op_top(opcode);
+                    break;
+                case ByteCode::OP_POP:
+                    skip = op_pop(opcode);
+                    break;
+                case ByteCode::OP_CLR:
+                    skip = op_clr(opcode);
+                    break;
+                case ByteCode::OP_DUP:
+                    skip = op_dup(opcode);
+                    break;
+                case ByteCode::OP_XCH:
+                    skip = op_xch(opcode);
+                    break;
+                case ByteCode::OP_STO:
+                    skip = op_sto(opcode);
+                    break;
+                case ByteCode::OP_RCL:
+                    skip = op_rcl(opcode);
+                    break;
+                case ByteCode::OP_ABS:
+                    skip = op_abs(opcode);
+                    break;
+                case ByteCode::OP_NEG:
+                    skip = op_neg(opcode);
+                    break;
+                case ByteCode::OP_ADD:
+                    skip = op_add(opcode);
+                    break;
+                case ByteCode::OP_SUB:
+                    skip = op_sub(opcode);
+                    break;
+                case ByteCode::OP_MUL:
+                    skip = op_mul(opcode);
+                    break;
+                case ByteCode::OP_DIV:
+                    skip = op_div(opcode);
+                    break;
+                case ByteCode::OP_MOD:
+                    skip = op_mod(opcode);
+                    break;
+                case ByteCode::OP_CPL:
+                    skip = op_cpl(opcode);
+                    break;
+                case ByteCode::OP_AND:
+                    skip = op_and(opcode);
+                    break;
+                case ByteCode::OP_IOR:
+                    skip = op_ior(opcode);
+                    break;
+                case ByteCode::OP_XOR:
+                    skip = op_xor(opcode);
+                    break;
+                case ByteCode::OP_SHL:
+                    skip = op_shl(opcode);
+                    break;
+                case ByteCode::OP_SHR:
+                    skip = op_shr(opcode);
+                    break;
+                case ByteCode::OP_INC:
+                    skip = op_inc(opcode);
+                    break;
+                case ByteCode::OP_DEC:
+                    skip = op_dec(opcode);
+                    break;
+                default:
+                    throw std::runtime_error("unexpected opcode");
+            }
+        }
+        epilog();
+    };
+
+    auto execute = [&]() -> void
+    {
+        BasicBlock basic_block(jit.begin(), jit.end());
+
+        if(basic_block.valid()) {
+            calculator.log_trace("the bytecode has already been translated, executing the generated machine code...");
+            basic_block.execute();
+        }
+        else {
+            calculator.log_trace("the bytecode has never been translated, executing bytecode and translating to machine code...");
+            translate();
+        }
+    };
+
+    return execute();
 }
 
 }
