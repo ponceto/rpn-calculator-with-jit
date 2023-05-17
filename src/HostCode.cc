@@ -44,55 +44,12 @@ namespace rpn {
 HostCode::HostCode()
     : Buffer()
 {
-    allocate();
+    Allocator::allocate(*this);
 }
 
 HostCode::~HostCode()
 {
-    deallocate();
-}
-
-void HostCode::allocate()
-{
-    if(_buflen == 0) {
-        const long buflen = ::sysconf(_SC_PAGESIZE);
-        if(buflen > 0) {
-            _buflen = buflen;
-        }
-        else {
-            throw std::runtime_error("sysconf() has failed");
-        }
-    }
-    if(_buffer == nullptr) {
-        const int prot   = (PROT_READ | PROT_WRITE | PROT_EXEC);
-        const int flags  = (MAP_PRIVATE | MAP_ANONYMOUS);
-        void*     buffer = ::mmap(nullptr, _buflen, prot, flags, -1, 0);
-        if(buffer != MAP_FAILED) {
-            _buffer = reinterpret_cast<uint8_t*>(buffer);
-            _bufptr = reinterpret_cast<uint8_t*>(buffer);
-            reset();
-        }
-        else {
-            throw std::runtime_error("mmap() has failed");
-        }
-    }
-}
-
-void HostCode::deallocate()
-{
-    if(_buffer != nullptr) {
-        const int rc = ::munmap(_buffer, _buflen);
-        if(rc == 0) {
-            _buffer = nullptr;
-            _bufptr = nullptr;
-        }
-        else {
-            throw std::runtime_error("munmap() has failed");
-        }
-    }
-    if(_buflen != 0) {
-        _buflen = 0;
-    }
+    Allocator::deallocate(*this);
 }
 
 void HostCode::reset()
@@ -198,6 +155,65 @@ void HostCode::call_rax()
 {
     emit_byte(0xff);
     emit_byte(0xd0);
+}
+
+}
+
+// ---------------------------------------------------------------------------
+// rpn::HostCode::Allocator
+// ---------------------------------------------------------------------------
+
+namespace rpn {
+
+void HostCode::Allocator::allocate(HostCode& hostcode)
+{
+    auto& _buffer(hostcode._buffer);
+    auto& _bufptr(hostcode._bufptr);
+    auto& _buflen(hostcode._buflen);
+
+    if(_buflen == 0) {
+        const long buflen = ::sysconf(_SC_PAGESIZE);
+        if(buflen > 0) {
+            _buflen = buflen;
+        }
+        else {
+            throw std::runtime_error("sysconf() has failed");
+        }
+    }
+    if(_buffer == nullptr) {
+        const int prot   = (PROT_READ | PROT_WRITE | PROT_EXEC);
+        const int flags  = (MAP_PRIVATE | MAP_ANONYMOUS);
+        void*     buffer = ::mmap(nullptr, _buflen, prot, flags, -1, 0);
+        if(buffer != MAP_FAILED) {
+            _buffer = reinterpret_cast<uint8_t*>(buffer);
+            _bufptr = reinterpret_cast<uint8_t*>(buffer);
+        }
+        else {
+            throw std::runtime_error("mmap() has failed");
+        }
+    }
+    hostcode.reset();
+}
+
+void HostCode::Allocator::deallocate(HostCode& hostcode)
+{
+    auto& _buffer(hostcode._buffer);
+    auto& _bufptr(hostcode._bufptr);
+    auto& _buflen(hostcode._buflen);
+
+    if(_buffer != nullptr) {
+        const int rc = ::munmap(_buffer, _buflen);
+        if(rc == 0) {
+            _buffer = nullptr;
+            _bufptr = nullptr;
+        }
+        else {
+            throw std::runtime_error("munmap() has failed");
+        }
+    }
+    if(_buflen != 0) {
+        _buflen = 0;
+    }
 }
 
 }

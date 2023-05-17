@@ -122,9 +122,12 @@ public: // public static data
     static constexpr uint8_t OP_DEC = 0x17;
 
 private: // private interface
-    void allocate();
+    struct Allocator
+    {
+        static void allocate(ByteCode&);
 
-    void deallocate();
+        static void deallocate(ByteCode&);
+    };
 };
 
 }

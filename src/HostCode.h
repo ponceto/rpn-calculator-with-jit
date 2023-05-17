@@ -70,9 +70,12 @@ public: // public interface
     void call_rax();
 
 private: // private interface
-    void allocate();
+    struct Allocator
+    {
+        static void allocate(HostCode&);
 
-    void deallocate();
+        static void deallocate(HostCode&);
+    };
 };
 
 }

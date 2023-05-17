@@ -44,33 +44,12 @@ namespace rpn {
 ByteCode::ByteCode()
     : Buffer()
 {
-    allocate();
+    Allocator::allocate(*this);
 }
 
 ByteCode::~ByteCode()
 {
-    deallocate();
-}
-
-void ByteCode::allocate()
-{
-    if(_buflen == 0) {
-        _buflen = 1024;
-    }
-    if(_buffer == nullptr) {
-        _buffer = _bufptr = new uint8_t[_buflen];
-        reset();
-    }
-}
-
-void ByteCode::deallocate()
-{
-    if(_buffer != nullptr) {
-        _buffer = _bufptr = (delete[] _buffer, nullptr);
-    }
-    if(_buflen != 0) {
-        _buflen = 0;
-    }
+    Allocator::deallocate(*this);
 }
 
 void ByteCode::reset()
@@ -228,6 +207,43 @@ void ByteCode::emit_inc()
 void ByteCode::emit_dec()
 {
     emit_byte(OP_DEC);
+}
+
+}
+
+// ---------------------------------------------------------------------------
+// rpn::ByteCode::Allocator
+// ---------------------------------------------------------------------------
+
+namespace rpn {
+
+void ByteCode::Allocator::allocate(ByteCode& bytecode)
+{
+    auto& _buffer(bytecode._buffer);
+    auto& _bufptr(bytecode._bufptr);
+    auto& _buflen(bytecode._buflen);
+
+    if(_buflen == 0) {
+        _buflen = 1024;
+    }
+    if(_buffer == nullptr) {
+        _buffer = _bufptr = new uint8_t[_buflen];
+    }
+    bytecode.reset();
+}
+
+void ByteCode::Allocator::deallocate(ByteCode& bytecode)
+{
+    auto& _buffer(bytecode._buffer);
+    auto& _bufptr(bytecode._bufptr);
+    auto& _buflen(bytecode._buflen);
+
+    if(_buffer != nullptr) {
+        _buffer = _bufptr = (delete[] _buffer, nullptr);
+    }
+    if(_buflen != 0) {
+        _buflen = 0;
+    }
 }
 
 }
