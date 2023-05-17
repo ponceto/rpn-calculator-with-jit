@@ -37,16 +37,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 ```
 .
-├── bin   [may contain some useful stuff]
-├── doc   [may contain some useful documents]
-├── etc   [may contain some useful files]
-├── lib   [may contain some useful libraries]
-└── src   [contains the source code]
+├── bin         [may contain some useful scripts]
+├── doc         [may contain some useful documents]
+├── etc         [may contain some useful files]
+├── lib         [may contain some useful libraries]
+└── src         [top src directory]
+    └── rpncalc [the rpn calculator source code]
 ```
 
 ## HOW TO BUILD
 
-A `Makefile` can be found in the `src` directory in order to `build` / `clean` / `check` the program.
+A `Makefile` can be found in the `src/rpncalc` directory in order to `build` / `clean` / `check` the program.
 
 ### BUILD
 
