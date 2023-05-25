@@ -185,8 +185,7 @@ void HostCode::Allocator::allocate(HostCode& hostcode)
         const int flags  = (MAP_PRIVATE | MAP_ANONYMOUS);
         void*     buffer = ::mmap(nullptr, _buflen, prot, flags, -1, 0);
         if(buffer != MAP_FAILED) {
-            _buffer = reinterpret_cast<uint8_t*>(buffer);
-            _bufptr = reinterpret_cast<uint8_t*>(buffer);
+            _buffer = _bufptr = reinterpret_cast<uint8_t*>(buffer);
         }
         else {
             throw std::runtime_error("mmap() has failed");
@@ -204,8 +203,7 @@ void HostCode::Allocator::deallocate(HostCode& hostcode)
     if(_buffer != nullptr) {
         const int rc = ::munmap(_buffer, _buflen);
         if(rc == 0) {
-            _buffer = nullptr;
-            _bufptr = nullptr;
+            _buffer = _bufptr = nullptr;
         }
         else {
             throw std::runtime_error("munmap() has failed");
