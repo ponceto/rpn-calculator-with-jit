@@ -333,8 +333,6 @@ void VirtualMachine::compile(Calculator& calculator, Operands& operands, ByteCod
 
 void VirtualMachine::run(Calculator& calculator, Operands& operands, ByteCode& bytecode, HostCode& hostcode)
 {
-    auto& jit(hostcode);
-
     auto exec_nop = [&]() -> void
     {
         calculator.log_debug("exec <nop>");
@@ -482,209 +480,209 @@ void VirtualMachine::run(Calculator& calculator, Operands& operands, ByteCode& b
     auto emit_prolog = [&]() -> void
     {
         calculator.log_debug("emit <function prolog>");
-        jit.push_rbp();
-        jit.mov_rbp_rsp();
+        hostcode.push_rbp();
+        hostcode.mov_rbp_rsp();
     };
 
     auto emit_epilog = [&]() -> void
     {
         calculator.log_debug("emit <function epilog>");
-        jit.mov_rsp_rbp();
-        jit.pop_rbp();
-        jit.ret();
+        hostcode.mov_rsp_rbp();
+        hostcode.pop_rbp();
+        hostcode.ret();
     };
 
     auto emit_nop = [&]() -> void
     {
         calculator.log_debug("emit <nop>");
-        jit.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&operands));
-        jit.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_nop));
-        jit.call_rax();
+        hostcode.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&operands));
+        hostcode.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_nop));
+        hostcode.call_rax();
     };
 
     auto emit_i64 = [&](const int64_t operand) -> void
     {
         calculator.log_debug("emit <i64>");
-        jit.mov_rsi_imm64(operand);
-        jit.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&operands));
-        jit.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_i64));
-        jit.call_rax();
+        hostcode.mov_rsi_imm64(operand);
+        hostcode.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&operands));
+        hostcode.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_i64));
+        hostcode.call_rax();
     };
 
     auto emit_top = [&]() -> void
     {
         calculator.log_debug("emit <top>");
-        jit.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&operands));
-        jit.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_top));
-        jit.call_rax();
+        hostcode.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&operands));
+        hostcode.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_top));
+        hostcode.call_rax();
     };
 
     auto emit_pop = [&]() -> void
     {
         calculator.log_debug("emit <pop>");
-        jit.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&operands));
-        jit.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_pop));
-        jit.call_rax();
+        hostcode.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&operands));
+        hostcode.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_pop));
+        hostcode.call_rax();
     };
 
     auto emit_clr = [&]() -> void
     {
         calculator.log_debug("emit <clr>");
-        jit.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&operands));
-        jit.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_clr));
-        jit.call_rax();
+        hostcode.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&operands));
+        hostcode.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_clr));
+        hostcode.call_rax();
     };
 
     auto emit_dup = [&]() -> void
     {
         calculator.log_debug("emit <dup>");
-        jit.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&operands));
-        jit.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_dup));
-        jit.call_rax();
+        hostcode.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&operands));
+        hostcode.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_dup));
+        hostcode.call_rax();
     };
 
     auto emit_xch = [&]() -> void
     {
         calculator.log_debug("emit <xch>");
-        jit.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&operands));
-        jit.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_xch));
-        jit.call_rax();
+        hostcode.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&operands));
+        hostcode.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_xch));
+        hostcode.call_rax();
     };
 
     auto emit_sto = [&]() -> void
     {
         calculator.log_debug("emit <sto>");
-        jit.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&operands));
-        jit.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_sto));
-        jit.call_rax();
+        hostcode.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&operands));
+        hostcode.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_sto));
+        hostcode.call_rax();
     };
 
     auto emit_rcl = [&]() -> void
     {
         calculator.log_debug("emit <rcl>");
-        jit.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&operands));
-        jit.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_rcl));
-        jit.call_rax();
+        hostcode.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&operands));
+        hostcode.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_rcl));
+        hostcode.call_rax();
     };
 
     auto emit_abs = [&]() -> void
     {
         calculator.log_debug("emit <abs>");
-        jit.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&operands));
-        jit.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_abs));
-        jit.call_rax();
+        hostcode.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&operands));
+        hostcode.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_abs));
+        hostcode.call_rax();
     };
 
     auto emit_neg = [&]() -> void
     {
         calculator.log_debug("emit <neg>");
-        jit.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&operands));
-        jit.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_neg));
-        jit.call_rax();
+        hostcode.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&operands));
+        hostcode.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_neg));
+        hostcode.call_rax();
     };
 
     auto emit_add = [&]() -> void
     {
         calculator.log_debug("emit <add>");
-        jit.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&operands));
-        jit.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_add));
-        jit.call_rax();
+        hostcode.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&operands));
+        hostcode.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_add));
+        hostcode.call_rax();
     };
 
     auto emit_sub = [&]() -> void
     {
         calculator.log_debug("emit <sub>");
-        jit.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&operands));
-        jit.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_sub));
-        jit.call_rax();
+        hostcode.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&operands));
+        hostcode.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_sub));
+        hostcode.call_rax();
     };
 
     auto emit_mul = [&]() -> void
     {
         calculator.log_debug("emit <mul>");
-        jit.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&operands));
-        jit.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_mul));
-        jit.call_rax();
+        hostcode.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&operands));
+        hostcode.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_mul));
+        hostcode.call_rax();
     };
 
     auto emit_div = [&]() -> void
     {
         calculator.log_debug("emit <div>");
-        jit.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&operands));
-        jit.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_div));
-        jit.call_rax();
+        hostcode.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&operands));
+        hostcode.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_div));
+        hostcode.call_rax();
     };
 
     auto emit_mod = [&]() -> void
     {
         calculator.log_debug("emit <mod>");
-        jit.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&operands));
-        jit.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_mod));
-        jit.call_rax();
+        hostcode.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&operands));
+        hostcode.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_mod));
+        hostcode.call_rax();
     };
 
     auto emit_cpl = [&]() -> void
     {
         calculator.log_debug("emit <cpl>");
-        jit.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&operands));
-        jit.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_cpl));
-        jit.call_rax();
+        hostcode.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&operands));
+        hostcode.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_cpl));
+        hostcode.call_rax();
     };
 
     auto emit_and = [&]() -> void
     {
         calculator.log_debug("emit <and>");
-        jit.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&operands));
-        jit.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_and));
-        jit.call_rax();
+        hostcode.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&operands));
+        hostcode.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_and));
+        hostcode.call_rax();
     };
 
     auto emit_ior = [&]() -> void
     {
         calculator.log_debug("emit <ior>");
-        jit.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&operands));
-        jit.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_ior));
-        jit.call_rax();
+        hostcode.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&operands));
+        hostcode.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_ior));
+        hostcode.call_rax();
     };
 
     auto emit_xor = [&]() -> void
     {
         calculator.log_debug("emit <xor>");
-        jit.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&operands));
-        jit.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_xor));
-        jit.call_rax();
+        hostcode.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&operands));
+        hostcode.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_xor));
+        hostcode.call_rax();
     };
 
     auto emit_shl = [&]() -> void
     {
         calculator.log_debug("emit <shl>");
-        jit.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&operands));
-        jit.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_shl));
-        jit.call_rax();
+        hostcode.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&operands));
+        hostcode.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_shl));
+        hostcode.call_rax();
     };
 
     auto emit_shr = [&]() -> void
     {
         calculator.log_debug("emit <shr>");
-        jit.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&operands));
-        jit.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_shr));
-        jit.call_rax();
+        hostcode.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&operands));
+        hostcode.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_shr));
+        hostcode.call_rax();
     };
 
     auto emit_inc = [&]() -> void
     {
         calculator.log_debug("emit <inc>");
-        jit.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&operands));
-        jit.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_inc));
-        jit.call_rax();
+        hostcode.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&operands));
+        hostcode.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_inc));
+        hostcode.call_rax();
     };
 
     auto emit_dec = [&]() -> void
     {
         calculator.log_debug("emit <dec>");
-        jit.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&operands));
-        jit.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_dec));
-        jit.call_rax();
+        hostcode.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&operands));
+        hostcode.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_dec));
+        hostcode.call_rax();
     };
 
     auto prolog = [&]() -> void
@@ -964,7 +962,7 @@ void VirtualMachine::run(Calculator& calculator, Operands& operands, ByteCode& b
 
     auto execute = [&]() -> void
     {
-        BasicBlock basic_block(jit.begin(), jit.end());
+        BasicBlock basic_block(hostcode.begin(), hostcode.end());
 
         if(basic_block.valid()) {
             calculator.log_trace("the bytecode has already been translated, executing the generated machine code...");

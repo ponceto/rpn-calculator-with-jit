@@ -54,21 +54,41 @@ BasicBlock::BasicBlock()
 {
 }
 
-BasicBlock::BasicBlock(const uint8_t* start, const uint8_t* end)
-    : _start(start)
+BasicBlock::BasicBlock(const uint8_t* begin, const uint8_t* end)
+    : _begin(begin)
     , _end(end)
 {
 }
 
+void BasicBlock::begin(const uint8_t* begin)
+{
+    if(_begin == nullptr) {
+        _begin = begin;
+    }
+    else {
+        throw std::runtime_error("basic block already has a beginning");
+    }
+}
+
+void BasicBlock::end(const uint8_t* end)
+{
+    if(_end == nullptr) {
+        _end = end;
+    }
+    else {
+        throw std::runtime_error("basic block already has an end");
+    }
+}
+
 void BasicBlock::reset()
 {
-    _start = nullptr;
+    _begin = nullptr;
     _end   = nullptr;
 }
 
 bool BasicBlock::valid() const
 {
-    if((_start != nullptr) && (_end != nullptr) && (_start < _end)) {
+    if((_begin != nullptr) && (_end != nullptr) && (_begin < _end)) {
         return true;
     }
     return false;
@@ -76,7 +96,7 @@ bool BasicBlock::valid() const
 
 void BasicBlock::execute() const
 {
-    FunctionPtr function = reinterpret_cast<FunctionPtr>(const_cast<uint8_t*>(_start));
+    FunctionPtr function = reinterpret_cast<FunctionPtr>(const_cast<uint8_t*>(_begin));
 
     if(function != nullptr) {
         (*function)();

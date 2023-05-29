@@ -36,6 +36,10 @@ public: // public interface
 
     virtual ~BasicBlock() = default;
 
+    void begin(const uint8_t* begin);
+
+    void end(const uint8_t* end);
+
     void reset();
 
     bool valid() const;
@@ -43,7 +47,7 @@ public: // public interface
     void execute() const;
 
 private: // private data
-    const uint8_t* _start;
+    const uint8_t* _begin;
     const uint8_t* _end;
 };
 
