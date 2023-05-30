@@ -31,6 +31,8 @@ class ByteCode final
 public: // public interface
     ByteCode();
 
+    ByteCode(ByteCode&&) = delete;
+
     ByteCode(const ByteCode&) = delete;
 
     ByteCode& operator=(const ByteCode&) = delete;

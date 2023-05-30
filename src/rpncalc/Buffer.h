@@ -28,6 +28,8 @@ class Buffer
 public: // public interface
     Buffer();
 
+    Buffer(Buffer&&) = delete;
+
     Buffer(const Buffer&) = delete;
 
     Buffer& operator=(const Buffer&) = delete;

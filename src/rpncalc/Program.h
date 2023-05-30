@@ -45,6 +45,8 @@ class Program final
 public: // public interface
     Program(ArgList&, Console&);
 
+    Program(Program&&) = delete;
+
     Program(const Program&) = delete;
 
     Program& operator=(const Program&) = delete;

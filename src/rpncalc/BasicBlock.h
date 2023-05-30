@@ -30,9 +30,11 @@ public: // public interface
 
     BasicBlock(const uint8_t* begin, const uint8_t* end);
 
-    BasicBlock(const BasicBlock&) = default;
+    BasicBlock(BasicBlock&&) = delete;
 
-    BasicBlock& operator=(const BasicBlock&) = default;
+    BasicBlock(const BasicBlock&) = delete;
+
+    BasicBlock& operator=(const BasicBlock&) = delete;
 
     virtual ~BasicBlock() = default;
 

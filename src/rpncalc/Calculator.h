@@ -36,6 +36,8 @@ class Calculator final
 public: // public interface
     Calculator(Console&);
 
+    Calculator(Calculator&&) = delete;
+
     Calculator(const Calculator&) = delete;
 
     Calculator& operator=(const Calculator&) = delete;

@@ -31,6 +31,8 @@ class HostCode final
 public: // public interface
     HostCode();
 
+    HostCode(HostCode&&) = delete;
+
     HostCode(const HostCode&) = delete;
 
     HostCode& operator=(const HostCode&) = delete;

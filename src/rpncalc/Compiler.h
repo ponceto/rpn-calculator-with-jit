@@ -33,6 +33,8 @@ class Compiler final
 public: // public interface
     Compiler(ByteCode&, HostCode&);
 
+    Compiler(Compiler&&) = delete;
+
     Compiler(const Compiler&) = delete;
 
     Compiler& operator=(const Compiler&) = delete;

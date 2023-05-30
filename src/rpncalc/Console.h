@@ -31,6 +31,8 @@ class Console final
 public: // public interface
     Console(std::istream& cin, std::ostream& cout, std::ostream& cerr);
 
+    Console(Console&&) = delete;
+
     Console(const Console&) = delete;
 
     Console& operator=(const Console&) = delete;

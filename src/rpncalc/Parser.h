@@ -30,6 +30,8 @@ class Parser
 public: // public interface
     Parser(Listener&);
 
+    Parser(Parser&&) = delete;
+
     Parser(const Parser&) = delete;
 
     Parser& operator=(const Parser&) = delete;
