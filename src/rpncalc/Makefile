@@ -187,6 +187,12 @@ check_fibonacci : build_rpncalc
 	./$(RPNCALC_BIN) $(RPNCALC_OPTS) "fib" compile "0 1" execute run run run run run run run run run run run run run run run
 	@echo ""
 
+check_random : build_rpncalc
+	@echo "=== $@ ==="
+	@echo ""
+	./$(RPNCALC_BIN) $(RPNCALC_OPTS) "now 30 sto" execute "rnd abs 127 mod" compile run run run run run run run run run run
+	@echo ""
+
 # ----------------------------------------------------------------------------
 # dependencies
 # ----------------------------------------------------------------------------
