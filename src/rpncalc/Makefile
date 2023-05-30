@@ -149,7 +149,9 @@ check_rpncalc : \
 	check_mul \
 	check_div \
 	check_mod \
-	check_fibonacci
+	check_fib \
+	check_now \
+	check_rnd
 
 check_add : build_rpncalc
 	@echo "=== $@ ==="
@@ -181,13 +183,19 @@ check_mod : build_rpncalc
 	./$(RPNCALC_BIN) $(RPNCALC_OPTS) "3 mod" compile "9 run" execute run
 	@echo ""
 
-check_fibonacci : build_rpncalc
+check_fib : build_rpncalc
 	@echo "=== $@ ==="
 	@echo ""
 	./$(RPNCALC_BIN) $(RPNCALC_OPTS) "fib" compile "0 1" execute run run run run run run run run run run run run run run run
 	@echo ""
 
-check_random : build_rpncalc
+check_now : build_rpncalc
+	@echo "=== $@ ==="
+	@echo ""
+	./$(RPNCALC_BIN) $(RPNCALC_OPTS) "now 1000 div 60 div 60 div 24 div 365 div" compile run run
+	@echo ""
+
+check_rnd : build_rpncalc
 	@echo "=== $@ ==="
 	@echo ""
 	./$(RPNCALC_BIN) $(RPNCALC_OPTS) "now 30 sto" execute "rnd abs 127 mod" compile run run run run run run run run run run
