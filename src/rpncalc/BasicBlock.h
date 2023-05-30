@@ -32,6 +32,8 @@ public: // public interface
 
     BasicBlock(BasicBlock&&) = delete;
 
+    BasicBlock& operator=(BasicBlock&&) = delete;
+
     BasicBlock(const BasicBlock&) = delete;
 
     BasicBlock& operator=(const BasicBlock&) = delete;

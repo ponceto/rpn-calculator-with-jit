@@ -33,6 +33,8 @@ public: // public interface
 
     Console(Console&&) = delete;
 
+    Console& operator=(Console&&) = delete;
+
     Console(const Console&) = delete;
 
     Console& operator=(const Console&) = delete;

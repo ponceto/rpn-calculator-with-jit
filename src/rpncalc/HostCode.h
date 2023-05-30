@@ -33,6 +33,8 @@ public: // public interface
 
     HostCode(HostCode&&) = delete;
 
+    HostCode& operator=(HostCode&&) = delete;
+
     HostCode(const HostCode&) = delete;
 
     HostCode& operator=(const HostCode&) = delete;

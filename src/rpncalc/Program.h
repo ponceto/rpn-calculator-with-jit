@@ -47,6 +47,8 @@ public: // public interface
 
     Program(Program&&) = delete;
 
+    Program& operator=(Program&&) = delete;
+
     Program(const Program&) = delete;
 
     Program& operator=(const Program&) = delete;

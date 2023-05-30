@@ -30,6 +30,8 @@ public: // public interface
 
     Buffer(Buffer&&) = delete;
 
+    Buffer& operator=(Buffer&&) = delete;
+
     Buffer(const Buffer&) = delete;
 
     Buffer& operator=(const Buffer&) = delete;

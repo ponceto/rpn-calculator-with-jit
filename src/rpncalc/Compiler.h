@@ -35,6 +35,8 @@ public: // public interface
 
     Compiler(Compiler&&) = delete;
 
+    Compiler& operator=(Compiler&&) = delete;
+
     Compiler(const Compiler&) = delete;
 
     Compiler& operator=(const Compiler&) = delete;

@@ -32,6 +32,8 @@ public: // public interface
 
     Parser(Parser&&) = delete;
 
+    Parser& operator=(Parser&&) = delete;
+
     Parser(const Parser&) = delete;
 
     Parser& operator=(const Parser&) = delete;

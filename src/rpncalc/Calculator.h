@@ -38,6 +38,8 @@ public: // public interface
 
     Calculator(Calculator&&) = delete;
 
+    Calculator& operator=(Calculator&&) = delete;
+
     Calculator(const Calculator&) = delete;
 
     Calculator& operator=(const Calculator&) = delete;

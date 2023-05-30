@@ -33,6 +33,8 @@ public: // public interface
 
     ByteCode(ByteCode&&) = delete;
 
+    ByteCode& operator=(ByteCode&&) = delete;
+
     ByteCode(const ByteCode&) = delete;
 
     ByteCode& operator=(const ByteCode&) = delete;
