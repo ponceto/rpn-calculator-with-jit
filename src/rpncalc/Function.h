@@ -1,5 +1,5 @@
 /*
- * Buffer.h - Copyright (c) 2023 - Olivier Poncet
+ * Function.h - Copyright (c) 2023 - Olivier Poncet
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,48 +14,42 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef __RPN_Buffer_h__
-#define __RPN_Buffer_h__
+#ifndef __RPN_Function_h__
+#define __RPN_Function_h__
+
+#include "BasicBlock.h"
 
 // ---------------------------------------------------------------------------
-// rpn::Buffer
+// rpn::Function
 // ---------------------------------------------------------------------------
 
 namespace rpn {
 
-class Buffer
+class Function
 {
 public: // public interface
-    Buffer();
+    Function();
 
-    Buffer(Buffer&&) = delete;
+    Function(Function&&) = delete;
 
-    Buffer& operator=(Buffer&&) = delete;
+    Function& operator=(Function&&) = delete;
 
-    Buffer(const Buffer&) = delete;
+    Function(const Function&) = delete;
 
-    Buffer& operator=(const Buffer&) = delete;
+    Function& operator=(const Function&) = delete;
 
-    virtual ~Buffer() = default;
+    virtual ~Function() = default;
 
-    const uint8_t* begin() const
-    {
-        return _buffer;
-    }
+    bool callable() const;
 
-    const uint8_t* end() const
-    {
-        return _bufptr;
-    }
+    void execute() const;
 
-    void clear(const uint8_t value);
+    void clear();
 
-    void write(const uint8_t value);
+    void add(const BasicBlock& basic_block);
 
-protected: // protected data
-    uint8_t* _buffer;
-    uint8_t* _bufptr;
-    size_t   _buflen;
+private: // private data
+    std::vector<BasicBlock> _basic_blocks;
 };
 
 }
@@ -64,4 +58,4 @@ protected: // protected data
 // End-Of-File
 // ---------------------------------------------------------------------------
 
-#endif /* __RPN_Buffer_h__ */
+#endif /* __RPN_BasicBlock_h__ */

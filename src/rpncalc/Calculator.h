@@ -135,6 +135,7 @@ private: // private data
     Operands _operands;
     ByteCode _bytecode;
     HostCode _hostcode;
+    Function _function;
 };
 
 }

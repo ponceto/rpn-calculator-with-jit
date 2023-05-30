@@ -52,9 +52,9 @@ ByteCode::~ByteCode()
     Allocator::deallocate(*this);
 }
 
-void ByteCode::reset()
+void ByteCode::clear()
 {
-    Buffer::reset(OP_NOP);
+    Buffer::clear(OP_NOP);
 }
 
 void ByteCode::emit_byte(const uint8_t value)
@@ -229,7 +229,7 @@ void ByteCode::Allocator::allocate(ByteCode& bytecode)
     if(_buffer == nullptr) {
         _buffer = _bufptr = new uint8_t[_buflen];
     }
-    bytecode.reset();
+    bytecode.clear();
 }
 
 void ByteCode::Allocator::deallocate(ByteCode& bytecode)

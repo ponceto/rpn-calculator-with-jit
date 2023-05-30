@@ -28,15 +28,13 @@ class BasicBlock
 public: // public interface
     BasicBlock();
 
-    BasicBlock(const uint8_t* begin, const uint8_t* end);
+    BasicBlock(BasicBlock&&) = default;
 
-    BasicBlock(BasicBlock&&) = delete;
+    BasicBlock& operator=(BasicBlock&&) = default;
 
-    BasicBlock& operator=(BasicBlock&&) = delete;
+    BasicBlock(const BasicBlock&) = default;
 
-    BasicBlock(const BasicBlock&) = delete;
-
-    BasicBlock& operator=(const BasicBlock&) = delete;
+    BasicBlock& operator=(const BasicBlock&) = default;
 
     virtual ~BasicBlock() = default;
 

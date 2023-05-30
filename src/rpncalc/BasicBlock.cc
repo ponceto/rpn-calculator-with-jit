@@ -34,12 +34,12 @@
 #include "BasicBlock.h"
 
 // ---------------------------------------------------------------------------
-// <anonymous>::FunctionPtr
+// <anonymous>::PointerToFunction
 // ---------------------------------------------------------------------------
 
 namespace {
 
-using FunctionPtr = void(*)(void);
+using PointerToFunction = void(*)(void);
 
 }
 
@@ -50,13 +50,8 @@ using FunctionPtr = void(*)(void);
 namespace rpn {
 
 BasicBlock::BasicBlock()
-    : BasicBlock(nullptr, nullptr)
-{
-}
-
-BasicBlock::BasicBlock(const uint8_t* begin, const uint8_t* end)
-    : _begin(begin)
-    , _end(end)
+    : _begin(nullptr)
+    , _end(nullptr)
 {
 }
 
@@ -96,13 +91,13 @@ bool BasicBlock::valid() const
 
 void BasicBlock::execute() const
 {
-    FunctionPtr function = reinterpret_cast<FunctionPtr>(const_cast<uint8_t*>(_begin));
+    PointerToFunction function = reinterpret_cast<PointerToFunction>(const_cast<uint8_t*>(_begin));
 
-    if(function != nullptr) {
+    if((_begin != nullptr) && (_end != nullptr) && (_begin < _end)) {
         (*function)();
     }
     else {
-        throw std::runtime_error("cannot execute null basic block");
+        throw std::runtime_error("cannot execute invalid basic block");
     }
 }
 

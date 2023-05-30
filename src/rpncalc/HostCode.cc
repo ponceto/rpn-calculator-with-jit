@@ -52,9 +52,9 @@ HostCode::~HostCode()
     Allocator::deallocate(*this);
 }
 
-void HostCode::reset()
+void HostCode::clear()
 {
-    Buffer::reset(0xc3);
+    Buffer::clear(0xc3);
 }
 
 void HostCode::emit_byte(const uint8_t value)
@@ -191,7 +191,7 @@ void HostCode::Allocator::allocate(HostCode& hostcode)
             throw std::runtime_error("mmap() has failed");
         }
     }
-    hostcode.reset();
+    hostcode.clear();
 }
 
 void HostCode::Allocator::deallocate(HostCode& hostcode)

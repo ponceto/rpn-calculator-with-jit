@@ -31,7 +31,6 @@
 #include <sstream>
 #include <iostream>
 #include <stdexcept>
-#include "BasicBlock.h"
 #include "Calculator.h"
 
 // ---------------------------------------------------------------------------
@@ -42,11 +41,11 @@ namespace rpn {
 
 struct VirtualMachine
 {
-    static void execute(Calculator&, Operands&, ByteCode&, HostCode&, const std::string& expression);
+    static void execute(Calculator&, Operands&, ByteCode&, HostCode&, Function&, const std::string& expression);
 
-    static void compile(Calculator&, Operands&, ByteCode&, HostCode&, const std::string& expression);
+    static void compile(Calculator&, Operands&, ByteCode&, HostCode&, Function&, const std::string& expression);
 
-    static void run(Calculator&, Operands&, ByteCode&, HostCode&);
+    static void run(Calculator&, Operands&, ByteCode&, HostCode&, Function&);
 };
 
 }
@@ -64,6 +63,7 @@ Calculator::Calculator(Console& console)
     , _operands()
     , _bytecode()
     , _hostcode()
+    , _function()
 {
 }
 
@@ -71,7 +71,7 @@ void Calculator::execute(const std::string& expression)
 {
     log_print(std::string("executing expression") + ' ' + '<' + expression + '>');
     try {
-        VirtualMachine::execute(*this, _operands, _bytecode, _hostcode, expression);
+        VirtualMachine::execute(*this, _operands, _bytecode, _hostcode, _function, expression);
     }
     catch(const std::runtime_error& e) {
         log_error("error while executing!");
@@ -84,7 +84,7 @@ void Calculator::compile(const std::string& expression)
 {
     log_print(std::string("compiling expression") + ' ' + '<' + expression + '>');
     try {
-        VirtualMachine::compile(*this, _operands, _bytecode, _hostcode, expression);
+        VirtualMachine::compile(*this, _operands, _bytecode, _hostcode, _function, expression);
     }
     catch(const std::runtime_error& e) {
         log_error("error while compiling!");
@@ -97,7 +97,7 @@ void Calculator::run()
 {
     log_print("running the compiled expression...");
     try {
-        VirtualMachine::run(*this, _operands, _bytecode, _hostcode);
+        VirtualMachine::run(*this, _operands, _bytecode, _hostcode, _function);
     }
     catch(const std::runtime_error& e) {
         log_error("error while running!");
@@ -246,7 +246,7 @@ void Calculator::op_dec()
 
 void Calculator::op_run()
 {
-    VirtualMachine::run(*this, _operands, _bytecode, _hostcode);
+    VirtualMachine::run(*this, _operands, _bytecode, _hostcode, _function);
 }
 
 void Calculator::log_debug(const std::string& message)
@@ -317,372 +317,486 @@ void Calculator::log_result()
 
 namespace rpn {
 
-void VirtualMachine::execute(Calculator& calculator, Operands& operands, ByteCode& bytecode, HostCode& hostcode, const std::string& expression)
+void VirtualMachine::execute(Calculator& calculator, Operands& operands, ByteCode& bytecode, HostCode& hostcode, Function& function, const std::string& expression)
 {
     Parser parser(calculator);
 
     parser.parse(expression);
 }
 
-void VirtualMachine::compile(Calculator& calculator, Operands& operands, ByteCode& bytecode, HostCode& hostcode, const std::string& expression)
+void VirtualMachine::compile(Calculator& calculator, Operands& operands, ByteCode& bytecode, HostCode& hostcode, Function& function, const std::string& expression)
 {
-    Compiler compiler(bytecode, hostcode);
+    Compiler compiler(bytecode, hostcode, function);
 
     compiler.compile(expression);
 }
 
-void VirtualMachine::run(Calculator& calculator, Operands& operands, ByteCode& bytecode, HostCode& hostcode)
+void VirtualMachine::run(Calculator& calculator, Operands& operands, ByteCode& bytecode, HostCode& hostcode, Function& function)
 {
+    auto log_debug = [&](const std::string& message) -> void
+    {
+        calculator.log_debug(message);
+    };
+
+    auto log_trace = [&](const std::string& message) -> void
+    {
+        calculator.log_trace(message);
+    };
+
     auto exec_nop = [&]() -> void
     {
-        calculator.log_debug("exec <nop>");
+        log_debug("exec <nop>");
         calculator.op_nop();
     };
 
     auto exec_i64 = [&](const int64_t operand) -> void
     {
-        calculator.log_debug("exec <i64>");
+        log_debug("exec <i64>");
         calculator.op_i64(operand);
     };
 
     auto exec_top = [&]() -> void
     {
-        calculator.log_debug("exec <top>");
+        log_debug("exec <top>");
         calculator.op_top();
     };
 
     auto exec_pop = [&]() -> void
     {
-        calculator.log_debug("exec <pop>");
+        log_debug("exec <pop>");
         calculator.op_pop();
     };
 
     auto exec_clr = [&]() -> void
     {
-        calculator.log_debug("exec <clr>");
+        log_debug("exec <clr>");
         calculator.op_clr();
     };
 
     auto exec_dup = [&]() -> void
     {
-        calculator.log_debug("exec <dup>");
+        log_debug("exec <dup>");
         calculator.op_dup();
     };
 
     auto exec_xch = [&]() -> void
     {
-        calculator.log_debug("exec <xch>");
+        log_debug("exec <xch>");
         calculator.op_xch();
     };
 
     auto exec_sto = [&]() -> void
     {
-        calculator.log_debug("exec <sto>");
+        log_debug("exec <sto>");
         calculator.op_sto();
     };
 
     auto exec_rcl = [&]() -> void
     {
-        calculator.log_debug("exec <rcl>");
+        log_debug("exec <rcl>");
         calculator.op_rcl();
     };
 
     auto exec_abs = [&]() -> void
     {
-        calculator.log_debug("exec <abs>");
+        log_debug("exec <abs>");
         calculator.op_abs();
     };
 
     auto exec_neg = [&]() -> void
     {
-        calculator.log_debug("exec <neg>");
+        log_debug("exec <neg>");
         calculator.op_neg();
     };
 
     auto exec_add = [&]() -> void
     {
-        calculator.log_debug("exec <add>");
+        log_debug("exec <add>");
         calculator.op_add();
     };
 
     auto exec_sub = [&]() -> void
     {
-        calculator.log_debug("exec <sub>");
+        log_debug("exec <sub>");
         calculator.op_sub();
     };
 
     auto exec_mul = [&]() -> void
     {
-        calculator.log_debug("exec <mul>");
+        log_debug("exec <mul>");
         calculator.op_mul();
     };
 
     auto exec_div = [&]() -> void
     {
-        calculator.log_debug("exec <div>");
+        log_debug("exec <div>");
         calculator.op_div();
     };
 
     auto exec_mod = [&]() -> void
     {
-        calculator.log_debug("exec <mod>");
+        log_debug("exec <mod>");
         calculator.op_mod();
     };
 
     auto exec_cpl = [&]() -> void
     {
-        calculator.log_debug("exec <cpl>");
+        log_debug("exec <cpl>");
         calculator.op_cpl();
     };
 
     auto exec_and = [&]() -> void
     {
-        calculator.log_debug("exec <and>");
+        log_debug("exec <and>");
         calculator.op_and();
     };
 
     auto exec_ior = [&]() -> void
     {
-        calculator.log_debug("exec <ior>");
+        log_debug("exec <ior>");
         calculator.op_ior();
     };
 
     auto exec_xor = [&]() -> void
     {
-        calculator.log_debug("exec <xor>");
+        log_debug("exec <xor>");
         calculator.op_xor();
     };
 
     auto exec_shl = [&]() -> void
     {
-        calculator.log_debug("exec <shl>");
+        log_debug("exec <shl>");
         calculator.op_shl();
     };
 
     auto exec_shr = [&]() -> void
     {
-        calculator.log_debug("exec <shr>");
+        log_debug("exec <shr>");
         calculator.op_shr();
     };
 
     auto exec_inc = [&]() -> void
     {
-        calculator.log_debug("exec <inc>");
+        log_debug("exec <inc>");
         calculator.op_inc();
     };
 
     auto exec_dec = [&]() -> void
     {
-        calculator.log_debug("exec <dec>");
+        log_debug("exec <dec>");
         calculator.op_dec();
     };
 
     auto emit_prolog = [&]() -> void
     {
-        calculator.log_debug("emit <function prolog>");
+        log_debug("emit <function prolog>");
+        BasicBlock bb;
+        bb.begin(hostcode.end());
         hostcode.push_rbp();
         hostcode.mov_rbp_rsp();
+        bb.end(hostcode.end());
+        function.add(bb);
     };
 
     auto emit_epilog = [&]() -> void
     {
-        calculator.log_debug("emit <function epilog>");
+        log_debug("emit <function epilog>");
+        BasicBlock bb;
+        bb.begin(hostcode.end());
         hostcode.mov_rsp_rbp();
         hostcode.pop_rbp();
         hostcode.ret();
+        bb.end(hostcode.end());
+        function.add(bb);
     };
 
     auto emit_nop = [&]() -> void
     {
-        calculator.log_debug("emit <nop>");
+        log_debug("emit <nop>");
+        BasicBlock bb;
+        bb.begin(hostcode.end());
         hostcode.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&operands));
         hostcode.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_nop));
         hostcode.call_rax();
+        bb.end(hostcode.end());
+        function.add(bb);
     };
 
     auto emit_i64 = [&](const int64_t operand) -> void
     {
-        calculator.log_debug("emit <i64>");
+        log_debug("emit <i64>");
+        BasicBlock bb;
+        bb.begin(hostcode.end());
         hostcode.mov_rsi_imm64(operand);
         hostcode.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&operands));
         hostcode.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_i64));
         hostcode.call_rax();
+        bb.end(hostcode.end());
+        function.add(bb);
     };
 
     auto emit_top = [&]() -> void
     {
-        calculator.log_debug("emit <top>");
+        log_debug("emit <top>");
+        BasicBlock bb;
+        bb.begin(hostcode.end());
         hostcode.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&operands));
         hostcode.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_top));
         hostcode.call_rax();
+        bb.end(hostcode.end());
+        function.add(bb);
     };
 
     auto emit_pop = [&]() -> void
     {
-        calculator.log_debug("emit <pop>");
+        log_debug("emit <pop>");
+        BasicBlock bb;
+        bb.begin(hostcode.end());
         hostcode.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&operands));
         hostcode.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_pop));
         hostcode.call_rax();
+        bb.end(hostcode.end());
+        function.add(bb);
     };
 
     auto emit_clr = [&]() -> void
     {
-        calculator.log_debug("emit <clr>");
+        log_debug("emit <clr>");
+        BasicBlock bb;
+        bb.begin(hostcode.end());
         hostcode.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&operands));
         hostcode.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_clr));
         hostcode.call_rax();
+        bb.end(hostcode.end());
+        function.add(bb);
     };
 
     auto emit_dup = [&]() -> void
     {
-        calculator.log_debug("emit <dup>");
+        log_debug("emit <dup>");
+        BasicBlock bb;
+        bb.begin(hostcode.end());
         hostcode.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&operands));
         hostcode.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_dup));
         hostcode.call_rax();
+        bb.end(hostcode.end());
+        function.add(bb);
     };
 
     auto emit_xch = [&]() -> void
     {
-        calculator.log_debug("emit <xch>");
+        log_debug("emit <xch>");
+        BasicBlock bb;
+        bb.begin(hostcode.end());
         hostcode.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&operands));
         hostcode.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_xch));
         hostcode.call_rax();
+        bb.end(hostcode.end());
+        function.add(bb);
     };
 
     auto emit_sto = [&]() -> void
     {
-        calculator.log_debug("emit <sto>");
+        log_debug("emit <sto>");
+        BasicBlock bb;
+        bb.begin(hostcode.end());
         hostcode.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&operands));
         hostcode.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_sto));
         hostcode.call_rax();
+        bb.end(hostcode.end());
+        function.add(bb);
     };
 
     auto emit_rcl = [&]() -> void
     {
-        calculator.log_debug("emit <rcl>");
+        log_debug("emit <rcl>");
+        BasicBlock bb;
+        bb.begin(hostcode.end());
         hostcode.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&operands));
         hostcode.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_rcl));
         hostcode.call_rax();
+        bb.end(hostcode.end());
+        function.add(bb);
     };
 
     auto emit_abs = [&]() -> void
     {
-        calculator.log_debug("emit <abs>");
+        log_debug("emit <abs>");
+        BasicBlock bb;
+        bb.begin(hostcode.end());
         hostcode.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&operands));
         hostcode.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_abs));
         hostcode.call_rax();
+        bb.end(hostcode.end());
+        function.add(bb);
     };
 
     auto emit_neg = [&]() -> void
     {
-        calculator.log_debug("emit <neg>");
+        log_debug("emit <neg>");
+        BasicBlock bb;
+        bb.begin(hostcode.end());
         hostcode.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&operands));
         hostcode.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_neg));
         hostcode.call_rax();
+        bb.end(hostcode.end());
+        function.add(bb);
     };
 
     auto emit_add = [&]() -> void
     {
-        calculator.log_debug("emit <add>");
+        log_debug("emit <add>");
+        BasicBlock bb;
+        bb.begin(hostcode.end());
         hostcode.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&operands));
         hostcode.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_add));
         hostcode.call_rax();
+        bb.end(hostcode.end());
+        function.add(bb);
     };
 
     auto emit_sub = [&]() -> void
     {
-        calculator.log_debug("emit <sub>");
+        log_debug("emit <sub>");
+        BasicBlock bb;
+        bb.begin(hostcode.end());
         hostcode.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&operands));
         hostcode.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_sub));
         hostcode.call_rax();
+        bb.end(hostcode.end());
+        function.add(bb);
     };
 
     auto emit_mul = [&]() -> void
     {
-        calculator.log_debug("emit <mul>");
+        log_debug("emit <mul>");
+        BasicBlock bb;
+        bb.begin(hostcode.end());
         hostcode.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&operands));
         hostcode.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_mul));
         hostcode.call_rax();
+        bb.end(hostcode.end());
+        function.add(bb);
     };
 
     auto emit_div = [&]() -> void
     {
-        calculator.log_debug("emit <div>");
+        log_debug("emit <div>");
+        BasicBlock bb;
+        bb.begin(hostcode.end());
         hostcode.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&operands));
         hostcode.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_div));
         hostcode.call_rax();
+        bb.end(hostcode.end());
+        function.add(bb);
     };
 
     auto emit_mod = [&]() -> void
     {
-        calculator.log_debug("emit <mod>");
+        log_debug("emit <mod>");
+        BasicBlock bb;
+        bb.begin(hostcode.end());
         hostcode.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&operands));
         hostcode.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_mod));
         hostcode.call_rax();
+        bb.end(hostcode.end());
+        function.add(bb);
     };
 
     auto emit_cpl = [&]() -> void
     {
-        calculator.log_debug("emit <cpl>");
+        log_debug("emit <cpl>");
+        BasicBlock bb;
+        bb.begin(hostcode.end());
         hostcode.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&operands));
         hostcode.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_cpl));
         hostcode.call_rax();
+        bb.end(hostcode.end());
+        function.add(bb);
     };
 
     auto emit_and = [&]() -> void
     {
-        calculator.log_debug("emit <and>");
+        log_debug("emit <and>");
+        BasicBlock bb;
+        bb.begin(hostcode.end());
         hostcode.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&operands));
         hostcode.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_and));
         hostcode.call_rax();
+        bb.end(hostcode.end());
+        function.add(bb);
     };
 
     auto emit_ior = [&]() -> void
     {
-        calculator.log_debug("emit <ior>");
+        log_debug("emit <ior>");
+        BasicBlock bb;
+        bb.begin(hostcode.end());
         hostcode.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&operands));
         hostcode.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_ior));
         hostcode.call_rax();
+        bb.end(hostcode.end());
+        function.add(bb);
     };
 
     auto emit_xor = [&]() -> void
     {
-        calculator.log_debug("emit <xor>");
+        log_debug("emit <xor>");
+        BasicBlock bb;
+        bb.begin(hostcode.end());
         hostcode.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&operands));
         hostcode.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_xor));
         hostcode.call_rax();
+        bb.end(hostcode.end());
+        function.add(bb);
     };
 
     auto emit_shl = [&]() -> void
     {
-        calculator.log_debug("emit <shl>");
+        log_debug("emit <shl>");
+        BasicBlock bb;
+        bb.begin(hostcode.end());
         hostcode.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&operands));
         hostcode.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_shl));
         hostcode.call_rax();
+        bb.end(hostcode.end());
+        function.add(bb);
     };
 
     auto emit_shr = [&]() -> void
     {
-        calculator.log_debug("emit <shr>");
+        log_debug("emit <shr>");
+        BasicBlock bb;
+        bb.begin(hostcode.end());
         hostcode.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&operands));
         hostcode.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_shr));
         hostcode.call_rax();
+        bb.end(hostcode.end());
+        function.add(bb);
     };
 
     auto emit_inc = [&]() -> void
     {
-        calculator.log_debug("emit <inc>");
+        log_debug("emit <inc>");
+        BasicBlock bb;
+        bb.begin(hostcode.end());
         hostcode.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&operands));
         hostcode.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_inc));
         hostcode.call_rax();
+        bb.end(hostcode.end());
+        function.add(bb);
     };
 
     auto emit_dec = [&]() -> void
     {
-        calculator.log_debug("emit <dec>");
+        log_debug("emit <dec>");
+        BasicBlock bb;
+        bb.begin(hostcode.end());
         hostcode.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&operands));
         hostcode.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_dec));
         hostcode.call_rax();
+        bb.end(hostcode.end());
+        function.add(bb);
     };
 
     auto prolog = [&]() -> void
@@ -962,14 +1076,12 @@ void VirtualMachine::run(Calculator& calculator, Operands& operands, ByteCode& b
 
     auto execute = [&]() -> void
     {
-        BasicBlock basic_block(hostcode.begin(), hostcode.end());
-
-        if(basic_block.valid()) {
-            calculator.log_trace("the bytecode has already been translated, executing the generated machine code...");
-            basic_block.execute();
+        if(function.callable()) {
+            log_trace("the bytecode has already been translated, executing the generated machine code...");
+            function.execute();
         }
         else {
-            calculator.log_trace("the bytecode has never been translated, executing bytecode and translating to machine code...");
+            log_trace("the bytecode has never been translated, executing bytecode and translating to machine code...");
             translate();
         }
     };

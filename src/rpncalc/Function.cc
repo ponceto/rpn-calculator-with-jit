@@ -1,5 +1,5 @@
 /*
- * Buffer.h - Copyright (c) 2023 - Olivier Poncet
+ * BasicBlock.cc - Copyright (c) 2023 - Olivier Poncet
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,54 +14,68 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef __RPN_Buffer_h__
-#define __RPN_Buffer_h__
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+#include <cerrno>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <cstdint>
+#include <climits>
+#include <algorithm>
+#include <chrono>
+#include <memory>
+#include <string>
+#include <vector>
+#include <sstream>
+#include <iostream>
+#include <stdexcept>
+#include "Function.h"
 
 // ---------------------------------------------------------------------------
-// rpn::Buffer
+// rpn::Function
 // ---------------------------------------------------------------------------
 
 namespace rpn {
 
-class Buffer
+Function::Function()
+    : _basic_blocks()
 {
-public: // public interface
-    Buffer();
+}
 
-    Buffer(Buffer&&) = delete;
+bool Function::callable() const
+{
+    if(_basic_blocks.empty()) {
+        return false;
+    }
+    return true;
+}
 
-    Buffer& operator=(Buffer&&) = delete;
-
-    Buffer(const Buffer&) = delete;
-
-    Buffer& operator=(const Buffer&) = delete;
-
-    virtual ~Buffer() = default;
-
-    const uint8_t* begin() const
-    {
-        return _buffer;
+void Function::execute() const
+{
+    if(_basic_blocks.size() > 0) {
+        const auto& basic_block(*_basic_blocks.begin());
+        basic_block.execute();
+    }
+    else {
+        throw std::runtime_error("cannot execute empty function");
     }
 
-    const uint8_t* end() const
-    {
-        return _bufptr;
-    }
+}
 
-    void clear(const uint8_t value);
+void Function::clear()
+{
+    _basic_blocks.clear();
+}
 
-    void write(const uint8_t value);
-
-protected: // protected data
-    uint8_t* _buffer;
-    uint8_t* _bufptr;
-    size_t   _buflen;
-};
+void Function::add(const BasicBlock& basic_block)
+{
+    _basic_blocks.push_back(basic_block);
+}
 
 }
 
 // ---------------------------------------------------------------------------
 // End-Of-File
 // ---------------------------------------------------------------------------
-
-#endif /* __RPN_Buffer_h__ */

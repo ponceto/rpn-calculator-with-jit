@@ -77,6 +77,7 @@ RPNCALC_SRCS = \
 	HostCode.cc \
 	Compiler.cc \
 	BasicBlock.cc \
+	Function.cc \
 	Calculator.cc \
 	Program.cc \
 	main.cc \
@@ -94,6 +95,7 @@ RPNCALC_HDRS = \
 	HostCode.h \
 	Compiler.h \
 	BasicBlock.h \
+	Function.h \
 	Calculator.h \
 	Program.h \
 	main.h \
@@ -111,6 +113,7 @@ RPNCALC_OBJS = \
 	HostCode.o \
 	Compiler.o \
 	BasicBlock.o \
+	Function.o \
 	Calculator.o \
 	Program.o \
 	main.o \
@@ -219,6 +222,9 @@ Compiler.o : Compiler.cc \
 	$(RPNCALC_HDRS)
 
 BasicBlock.o : BasicBlock.cc \
+	$(RPNCALC_HDRS)
+
+Function.o : Function.cc \
 	$(RPNCALC_HDRS)
 
 Calculator.o : Calculator.cc \

@@ -20,6 +20,7 @@
 #include "Listener.h"
 #include "ByteCode.h"
 #include "HostCode.h"
+#include "Function.h"
 
 // ---------------------------------------------------------------------------
 // rpn::Compiler
@@ -31,7 +32,7 @@ class Compiler final
     : public Listener
 {
 public: // public interface
-    Compiler(ByteCode&, HostCode&);
+    Compiler(ByteCode&, HostCode&, Function&);
 
     Compiler(Compiler&&) = delete;
 
@@ -101,6 +102,7 @@ public: // listener interface
 private: // private data
     ByteCode& _bytecode;
     HostCode& _hostcode;
+    Function& _function;
 };
 
 }

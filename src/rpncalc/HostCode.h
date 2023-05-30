@@ -41,7 +41,7 @@ public: // public interface
 
     virtual ~HostCode();
 
-    void reset();
+    void clear();
 
     void emit_byte(const uint8_t value);
 

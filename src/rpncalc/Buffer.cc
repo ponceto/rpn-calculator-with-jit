@@ -46,7 +46,7 @@ Buffer::Buffer()
 {
 }
 
-void Buffer::reset(const uint8_t value)
+void Buffer::clear(const uint8_t value)
 {
     auto fill = [&](uint8_t* begin, uint8_t* end, uint8_t value) -> void
     {

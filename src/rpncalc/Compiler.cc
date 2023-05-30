@@ -40,13 +40,15 @@
 
 namespace rpn {
 
-Compiler::Compiler(ByteCode& bytecode, HostCode& hostcode)
+Compiler::Compiler(ByteCode& bytecode, HostCode& hostcode, Function& function)
     : Listener()
     , _bytecode(bytecode)
     , _hostcode(hostcode)
+    , _function(function)
 {
-    _bytecode.reset();
-    _hostcode.reset();
+    _bytecode.clear();
+    _hostcode.clear();
+    _function.clear();
 }
 
 void Compiler::compile(std::istream& stream)
