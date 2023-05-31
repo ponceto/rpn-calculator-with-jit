@@ -89,6 +89,8 @@ struct Operators
     static int64_t op_inc(Operands& operands);
 
     static int64_t op_dec(Operands& operands);
+
+    static int64_t op_hlt(Operands& operands);
 };
 
 }

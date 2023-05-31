@@ -185,6 +185,11 @@ void Compiler::op_dec()
     _bytecode.emit_dec();
 }
 
+void Compiler::op_hlt()
+{
+    _bytecode.emit_hlt();
+}
+
 void Compiler::op_run()
 {
     throw std::runtime_error("the <run> instruction cannot be compiled");

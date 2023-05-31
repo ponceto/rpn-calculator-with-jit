@@ -209,6 +209,11 @@ void ByteCode::emit_dec()
     emit_byte(OP_DEC);
 }
 
+void ByteCode::emit_hlt()
+{
+    emit_byte(OP_HLT);
+}
+
 }
 
 // ---------------------------------------------------------------------------

@@ -87,10 +87,11 @@ enum Token
     TK_SHR = 42,
     TK_INC = 43,
     TK_DEC = 44,
-    TK_RND = 45,
-    TK_NOW = 46,
-    TK_FIB = 47,
-    TK_RUN = 48,
+    TK_HLT = 45,
+    TK_RND = 46,
+    TK_NOW = 47,
+    TK_FIB = 48,
+    TK_RUN = 49,
 };
 
 }
@@ -153,6 +154,7 @@ void Parser::parse(std::istream& stream)
         { "shr", TK_SHR },
         { "inc", TK_INC },
         { "dec", TK_DEC },
+        { "hlt", TK_HLT },
         { "rnd", TK_RND },
         { "now", TK_NOW },
         { "fib", TK_FIB },
@@ -336,6 +338,9 @@ void Parser::parse(std::istream& stream)
                 break;
             case TK_DEC:
                 _listener.op_dec();
+                break;
+            case TK_HLT:
+                _listener.op_hlt();
                 break;
             case TK_RND:
                 _listener.op_rnd();

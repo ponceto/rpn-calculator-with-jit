@@ -148,6 +148,7 @@ This RPN calculator implements a simple syntax to compute some mathematical or l
 | `i1` | `i2` | `shr` | shift `i1` `i2` bits to the right                                                |
 |      | `i1` | `inc` | increment `i1`                                                                   |
 |      | `i1` | `dec` | decrement `i1`                                                                   |
+|      | `i1` | `hlt` | blocks the execution for at least `i1` millisecond                               |
 
 ### GENERAL OPERATORS
 

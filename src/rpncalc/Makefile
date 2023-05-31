@@ -192,7 +192,7 @@ check_fib : build_rpncalc
 check_now : build_rpncalc
 	@echo "=== $@ ==="
 	@echo ""
-	./$(RPNCALC_BIN) $(RPNCALC_OPTS) "now 1000 div 60 div 60 div 24 div 365 div" compile run run
+	./$(RPNCALC_BIN) $(RPNCALC_OPTS) "now 100 hlt" compile run run run run run run run run run run run run run run run
 	@echo ""
 
 check_rnd : build_rpncalc

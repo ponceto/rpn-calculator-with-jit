@@ -99,6 +99,8 @@ public: // public interface
 
     void emit_dec();
 
+    void emit_hlt();
+
 public: // public static data
     static constexpr uint8_t OP_NOP = 0x00;
     static constexpr uint8_t OP_I64 = 0x01;
@@ -124,6 +126,7 @@ public: // public static data
     static constexpr uint8_t OP_SHR = 0x15;
     static constexpr uint8_t OP_INC = 0x16;
     static constexpr uint8_t OP_DEC = 0x17;
+    static constexpr uint8_t OP_HLT = 0x18;
 
 private: // private interface
     struct Allocator

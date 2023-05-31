@@ -25,6 +25,7 @@
 #include <climits>
 #include <algorithm>
 #include <chrono>
+#include <thread>
 #include <memory>
 #include <string>
 #include <vector>
@@ -336,6 +337,15 @@ int64_t Operators::op_dec(Operands& operands)
     const int64_t res = Stack::push(operands, (op1 - 1));
 
     return res;
+}
+
+int64_t Operators::op_hlt(Operands& operands)
+{
+    const int64_t op1 = Stack::pop(operands);
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(op1));
+
+    return op1;
 }
 
 }

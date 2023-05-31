@@ -244,6 +244,11 @@ void Calculator::op_dec()
     static_cast<void>(Operators::op_dec(_operands));
 }
 
+void Calculator::op_hlt()
+{
+    static_cast<void>(Operators::op_hlt(_operands));
+}
+
 void Calculator::op_run()
 {
     VirtualMachine::run(*this, _operands, _bytecode, _hostcode, _function);
@@ -485,6 +490,12 @@ void VirtualMachine::run(Calculator& calculator, Operands& operands, ByteCode& b
     {
         log_debug("exec <dec>");
         calculator.op_dec();
+    };
+
+    auto exec_hlt = [&]() -> void
+    {
+        log_debug("exec <hlt>");
+        calculator.op_hlt();
     };
 
     auto emit_prolog = [&]() -> void
@@ -799,6 +810,18 @@ void VirtualMachine::run(Calculator& calculator, Operands& operands, ByteCode& b
         function.add(bb);
     };
 
+    auto emit_hlt = [&]() -> void
+    {
+        log_debug("emit <hlt>");
+        BasicBlock bb;
+        bb.begin(hostcode.end());
+        hostcode.mov_rdi_imm64(reinterpret_cast<uintptr_t>(&operands));
+        hostcode.mov_rax_imm64(reinterpret_cast<uintptr_t>(&Operators::op_hlt));
+        hostcode.call_rax();
+        bb.end(hostcode.end());
+        function.add(bb);
+    };
+
     auto prolog = [&]() -> void
     {
         emit_prolog();
@@ -986,6 +1009,13 @@ void VirtualMachine::run(Calculator& calculator, Operands& operands, ByteCode& b
         return 0;
     };
 
+    auto op_hlt = [&](const uint8_t& opcode) -> int
+    {
+        exec_hlt();
+        emit_hlt();
+        return 0;
+    };
+
     auto translate = [&]() -> void
     {
         prolog();
@@ -1066,6 +1096,9 @@ void VirtualMachine::run(Calculator& calculator, Operands& operands, ByteCode& b
                     break;
                 case ByteCode::OP_DEC:
                     skip = op_dec(opcode);
+                    break;
+                case ByteCode::OP_HLT:
+                    skip = op_hlt(opcode);
                     break;
                 default:
                     throw std::runtime_error("unexpected opcode");

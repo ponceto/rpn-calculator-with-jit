@@ -97,6 +97,8 @@ public: // listener interface
 
     virtual void op_dec() override;
 
+    virtual void op_hlt() override;
+
     virtual void op_run() override;
 
 private: // private data

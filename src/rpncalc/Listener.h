@@ -78,6 +78,8 @@ public: // public interface
 
     virtual void op_dec() = 0;
 
+    virtual void op_hlt() = 0;
+
     virtual void op_st0();
 
     virtual void op_st1();
