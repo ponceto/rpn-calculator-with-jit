@@ -166,6 +166,16 @@ void Program::run()
 
     auto arg_run = [&](const std::string& argument) -> bool
     {
+        const char*  prefix = "run=";
+        const size_t length = ::strlen(prefix);
+        if(argument.compare(0, length, prefix) == 0) {
+            int count = ::atoi(argument.data() + length);
+            while(count > 0) {
+                _calculator.run();
+                --count;
+            }
+            return true;
+        }
         if(argument == "run") {
             _calculator.run();
             return true;
@@ -224,7 +234,7 @@ void Program::run()
         stream << ""                                                                       << std::endl;
         stream << "    execute                     execute an RPN expression"              << std::endl;
         stream << "    compile                     compile an RPN expression"              << std::endl;
-        stream << "    run                         run the compiled expression"            << std::endl;
+        stream << "    run{=n}                     run the compiled expression <n> times"  << std::endl;
         stream << "    clear                       clear the stack"                        << std::endl;
         stream << ""                                                                       << std::endl;
     };

@@ -111,7 +111,7 @@ Verb:
 
     execute                     execute an RPN expression
     compile                     compile an RPN expression
-    run                         run the compiled expression
+    run{=n}                     run the compiled expression <n> times
     clear                       clear the stack
 
 ```
@@ -359,14 +359,14 @@ Results:
 
 ### Example 4
 
-Compile the Fibonacci function then execute some iterations.
+Compile the Fibonacci function then execute 15 iterations.
 
   - Compile the function `fib`.
   - Initialize the stack with `0` and `1`.
   - Execute 15 iterations of the Fibonacci function.
 
 ```
-rpncalc.bin 'fib' compile '0 1' execute run run run run run run run run run run run run run run run
+rpncalc.bin 'fib' compile '0 1' execute run=15
 ```
 
 Results:
@@ -448,7 +448,7 @@ Generate a sequence of random numbers.
   - Generate 10 pseudo-random numbers.
 
 ```
-rpncalc.bin 'now 30 sto' execute 'rnd abs 127 mod' compile run run run run run run run run run run
+rpncalc.bin 'now 30 sto' execute 'rnd abs 127 mod' compile run=10
 ```
 
 Results:

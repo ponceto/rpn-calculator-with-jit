@@ -150,55 +150,55 @@ check_rpncalc : \
 	check_div \
 	check_mod \
 	check_fib \
-	check_now \
-	check_rnd
+	check_rnd \
+	check_now
 
 check_add : build_rpncalc
 	@echo "=== $@ ==="
 	@echo ""
-	./$(RPNCALC_BIN) $(RPNCALC_OPTS) "3 add" compile "9 run" execute run
+	./$(RPNCALC_BIN) $(RPNCALC_OPTS) "3 add" compile "997" execute run=2
 	@echo ""
 
 check_sub : build_rpncalc
 	@echo "=== $@ ==="
 	@echo ""
-	./$(RPNCALC_BIN) $(RPNCALC_OPTS) "3 sub" compile "9 run" execute run
+	./$(RPNCALC_BIN) $(RPNCALC_OPTS) "3 sub" compile "997" execute run=2
 	@echo ""
 
 check_mul : build_rpncalc
 	@echo "=== $@ ==="
 	@echo ""
-	./$(RPNCALC_BIN) $(RPNCALC_OPTS) "3 mul" compile "9 run" execute run
+	./$(RPNCALC_BIN) $(RPNCALC_OPTS) "3 mul" compile "997" execute run=2
 	@echo ""
 
 check_div : build_rpncalc
 	@echo "=== $@ ==="
 	@echo ""
-	./$(RPNCALC_BIN) $(RPNCALC_OPTS) "3 div" compile "9 run" execute run
+	./$(RPNCALC_BIN) $(RPNCALC_OPTS) "3 div" compile "997" execute run=2
 	@echo ""
 
 check_mod : build_rpncalc
 	@echo "=== $@ ==="
 	@echo ""
-	./$(RPNCALC_BIN) $(RPNCALC_OPTS) "3 mod" compile "9 run" execute run
+	./$(RPNCALC_BIN) $(RPNCALC_OPTS) "3 mod" compile "997" execute run=2
 	@echo ""
 
 check_fib : build_rpncalc
 	@echo "=== $@ ==="
 	@echo ""
-	./$(RPNCALC_BIN) $(RPNCALC_OPTS) "fib" compile "0 1" execute run run run run run run run run run run run run run run run
-	@echo ""
-
-check_now : build_rpncalc
-	@echo "=== $@ ==="
-	@echo ""
-	./$(RPNCALC_BIN) $(RPNCALC_OPTS) "now 100 hlt" compile run run run run run run run run run run run run run run run
+	./$(RPNCALC_BIN) $(RPNCALC_OPTS) "fib" compile "0 1" execute run=15
 	@echo ""
 
 check_rnd : build_rpncalc
 	@echo "=== $@ ==="
 	@echo ""
-	./$(RPNCALC_BIN) $(RPNCALC_OPTS) "now 30 sto" execute "rnd abs 127 mod" compile run run run run run run run run run run
+	./$(RPNCALC_BIN) $(RPNCALC_OPTS) "now 30 sto" execute "rnd abs 127 mod" compile run=15
+	@echo ""
+
+check_now : build_rpncalc
+	@echo "=== $@ ==="
+	@echo ""
+	./$(RPNCALC_BIN) $(RPNCALC_OPTS) "now 10 hlt" compile run=15
 	@echo ""
 
 # ----------------------------------------------------------------------------
